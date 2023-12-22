@@ -1,39 +1,36 @@
 
 function ctrl_c {
+  stty echo
+  read selected <<<"" # do a read or tty echo broken
   tput cnorm
   tput rc
   tput ed
-  printf "\n\e[0;91mx \e[0m\e[1;77mAbort                                                               \e[0m"
+  printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" Aborted
   echo
-  stty echo
   exit
 }
 
 _showmenu() {
   typeset title="$1" subtitle="$2" items="$3" nsel="$4" filter="$5" item i min max
+  tput sc
+  [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%-$((COLUMNS-4))s\e[0;96m  %s\e[0m" "$title"
 
-  [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%-$((COLUMS-3-${#title}))s\e[0;96m  %s\e[0m" "$title"
-  readarray -t aitems <<<"$items"
   min=$(($nsel-$LINES+3))
   [ "$min" -le 0 ] && min=1
   max=$(($min+$LINES-3))
   i=0
-  for item in "${aitems[@]}"
+  while read item
   do
     i=$((i + 1))
     [[ $i -ge $min ]] && [[ $i -le $max ]] || continue
     if [[ $nsel == "$i" ]]; then 
-      printf "\n\e[1;96m> %-$((COLUMNS-5))s\e[0m" "$i: $item"
+      printf "\n\e[1;96m> %-$((COLUMNS-2))s\e[0m" "$i: $item"
     else
-      printf "\n  %-$((COLUMNS-5))s" "$i: $item"
+      printf "\n  %-$((COLUMNS-2))s" "$i: $item"
     fi
-  done
-  printf "\n$subtitle: %-$((COLUMNS-3-${#subtitle}))s" "$filter"
-  tput sc
-  for ((i=0; i<=${#aitems[@]}; ++i)); do
-    tput cuu1
-    tput sc
-  done
+  done <<<"$items"
+  printf "\n$subtitle: %-$((COLUMNS-2-${#subtitle}))s" "$filter"
+  tput rc
 }
 
 _clearmenu () {
@@ -44,16 +41,20 @@ _clearmenu () {
 _domenu () {
   typeset title="$1" subtitle="$2" items="$3" filter="" nsel=1
   _showmenu "$1" "$2" "$3" "$nsel"
+  readarray -t aitems <<<"$items"
+  stty -echo
   while true
-    do
-    echo "$filter" >>/tmp/o
-    #stty -echo
-    read -rsn1 k
+  do
+    read -sn1 k
     case $k in
-      A) filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
-        _showmenu "$1" "$2" "$items" "$nsel" "$filter" </dev/null ;;
-      B) filter="";[ $nsel != ${#aitems[@]} ] && nsel=$((nsel + 1)) && \
-        _showmenu "$1" "$2" "$items" "$nsel" "$filter" </dev/null;;
+      $'\x1b')
+          read -sn2 -t.001 k
+          case $k in 
+            '[A') [ $nsel != 1 ] && nsel=$((nsel - 1)) && \
+              _showmenu "$1" "$2" "$items" "$nsel" "$filter" </dev/null ;;
+            '[B') filter="";[ $nsel != ${#aitems[@]} ] && nsel=$((nsel + 1)) && \
+              _showmenu "$1" "$2" "$items" "$nsel" "$filter" </dev/null;;
+          esac;;
       $'\x7f') filter=${filter%?}
         _showmenu "$1" "$2" "$items" "$nsel" "$filter";;
       "")   
@@ -61,10 +62,11 @@ _domenu () {
         tput ed
         [ "$filter" ] && nsel=""
         [[ "$filter" = +([0-9]) ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
-        [ "$nsel" ] && readarray -t aitems <<<"$items" && selected=${aitems[$((nsel-1))]}
-        [ ! "$selected" ] && _clearmenu && return 1
-        [[ "$selected" != *$'\n'* ]] && _clearmenu && return 0
+        [ "$nsel" ] && selected=${aitems[$((nsel-1))]}
+        [ ! "$selected" ] && _clearmenu && break
+        [[ "$selected" != *$'\n'* ]] && _clearmenu && break
         items="$selected"
+        readarray -t aitems <<<"$items"
         nsel=1
         filter=""
         _showmenu "$1" "$2" "$items" "$nsel" "$filter"
@@ -72,8 +74,8 @@ _domenu () {
       *) filter="$filter$k"
         _showmenu "$1" "$2" "$items" "$nsel" "$filter";;
     esac
-    stty echo
   done
+  stty echo
 }
 
 bselect() {
