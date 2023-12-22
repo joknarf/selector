@@ -1,21 +1,20 @@
-selected=1
 
 function ctrl_c {
   tput cnorm
   tput rc
   tput ed
-  printf "\r\e[0;91mx \e[0m\e[1;77mAbort                                                               \e[0m"
+  printf "\n\e[0;91mx \e[0m\e[1;77mAbort                                                               \e[0m"
   echo
   stty echo
   exit
 }
 
 _showmenu() {
-  typeset title="$1" subtitle="$2" items="$3" numselected="$4" command i min max
+  typeset title="$1" subtitle="$2" items="$3" nsel="$4" filter="$5" item i min max
 
-  [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%s\e[0;96m  %s\e[0m" "$title" "$subtitle"
+  [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%-$((COLUMS-3-${#title}))s\e[0;96m  %s\e[0m" "$title"
   readarray -t aitems <<<"$items"
-  min=$(($selected-$LINES+3))
+  min=$(($nsel-$LINES+3))
   [ "$min" -le 0 ] && min=1
   max=$(($min+$LINES-3))
   i=0
@@ -23,13 +22,13 @@ _showmenu() {
   do
     i=$((i + 1))
     [[ $i -ge $min ]] && [[ $i -le $max ]] || continue
-    if [[ $selected == "$i" ]]; then 
-      printf "\n\r\e[1;96m> %s                             \e[0m" "$i: $item"
+    if [[ $nsel == "$i" ]]; then 
+      printf "\n\e[1;96m> %-$((COLUMNS-5))s\e[0m" "$i: $item"
     else
-      printf "\n\r  %s                                   " "$i: $item"
+      printf "\n  %-$((COLUMNS-5))s" "$i: $item"
     fi
   done
-  printf "\nSelect: $numselected                         "
+  printf "\n$subtitle: %-$((COLUMNS-3-${#subtitle}))s" "$filter"
   tput sc
   for ((i=0; i<=${#aitems[@]}; ++i)); do
     tput cuu1
@@ -38,41 +37,40 @@ _showmenu() {
 }
 
 _clearmenu () {
-  typeset nbitems=$1
-  printf "\r                                                                            "
-  for ((c=1; c<nbitems; ++c)); do
-    printf "\n\r                                                                             "
-  done
-  tput rc
-  tput sc
   tput cnorm
-  tput ed
   printf "\n"
-  stty echo
-  return
 }
 
 _domenu () {
-  typeset title="$1" subtitle="$2" items="$3" numselected=""
-  _showmenu "$1" "$2" "$3"
-  readarray -t aitems <<<"$items"
+  typeset title="$1" subtitle="$2" items="$3" filter="" nsel=1
+  _showmenu "$1" "$2" "$3" "$nsel"
   while true
     do
-    stty -echo
-    read -r -sn1 t
-    case $t in
-      A) [ $selected != 1 ] && selected=$((selected - 1)) && \
-        _showmenu "$1" "$2" "$3" "$numselected";;
-      B) [ $selected != ${#aitems[@]} ] && selected=$((selected + 1)) && \
-        _showmenu "$1" "$2" "$3" "$numselected";;
-      [0-9]) numselected="$numselected$t"
-        [ "$numselected" != 0 ] && [ "$numselected" -le "${#aitems[@]}" ] || numselected=""
-        _showmenu "$1" "$2" "$3" "$numselected";;
-      $'\x7f') numselected=${numselected#?}
-        _showmenu "$1" "$2" "$3" "$numselected";;
-      "") [ "$numselected" ] && selected=$numselected
-        _clearmenu ${#aitems[@]}; return;;
-      q) selected="";_clearmenu ${#aitems[@]};return;;
+    echo "$filter" >>/tmp/o
+    #stty -echo
+    read -rsn1 k
+    case $k in
+      A) filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
+        _showmenu "$1" "$2" "$items" "$nsel" "$filter" </dev/null ;;
+      B) filter="";[ $nsel != ${#aitems[@]} ] && nsel=$((nsel + 1)) && \
+        _showmenu "$1" "$2" "$items" "$nsel" "$filter" </dev/null;;
+      $'\x7f') filter=${filter%?}
+        _showmenu "$1" "$2" "$items" "$nsel" "$filter";;
+      "")   
+        tput rc
+        tput ed
+        [ "$filter" ] && nsel=""
+        [[ "$filter" = +([0-9]) ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
+        [ "$nsel" ] && readarray -t aitems <<<"$items" && selected=${aitems[$((nsel-1))]}
+        [ ! "$selected" ] && _clearmenu && return 1
+        [[ "$selected" != *$'\n'* ]] && _clearmenu && return 0
+        items="$selected"
+        nsel=1
+        filter=""
+        _showmenu "$1" "$2" "$items" "$nsel" "$filter"
+        ;;
+      *) filter="$filter$k"
+        _showmenu "$1" "$2" "$items" "$nsel" "$filter";;
     esac
     stty echo
   done
@@ -81,6 +79,7 @@ _domenu () {
 bselect() {
   typeset title subtitle items
   trap ctrl_c INT
+  selected=""
   while [ $# -gt 0 ]; do
     case "$1" in
       -t|--title)
