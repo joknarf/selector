@@ -33,11 +33,6 @@ _showmenu() {
   tput rc
 }
 
-_clearmenu () {
-  tput cnorm
-  printf "\n"
-}
-
 _domenu () {
   typeset title="$1" subtitle="$2" items="$3" filter="" nsel=1
   _showmenu "$1" "$2" "$3" "$nsel"
@@ -63,8 +58,8 @@ _domenu () {
         [ "$filter" ] && nsel=""
         [[ "$filter" = +([0-9]) ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
         [ "$nsel" ] && selected=${aitems[$((nsel-1))]}
-        [ ! "$selected" ] && _clearmenu && break
-        [[ "$selected" != *$'\n'* ]] && _clearmenu && break
+        [ ! "$selected" ] && break
+        [[ "$selected" != *$'\n'* ]] && break
         items="$selected"
         readarray -t aitems <<<"$items"
         nsel=1
@@ -76,6 +71,8 @@ _domenu () {
     esac
   done
   stty echo
+  tput cnorm
+  printf "\n"
 }
 
 bselect() {
