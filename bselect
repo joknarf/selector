@@ -1,0 +1,114 @@
+selected=1
+
+function ctrl_c {
+  tput cnorm
+  tput rc
+  tput ed
+  printf "\r\e[0;91mx \e[0m\e[1;77mAbort                                                               \e[0m"
+  echo
+  stty echo
+  exit
+}
+
+_showmenu() {
+  typeset title="$1" subtitle="$2" items="$3" numselected="$4" command i min max
+
+  [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%s\e[0;96m  %s\e[0m" "$title" "$subtitle"
+  readarray -t aitems <<<"$items"
+  min=$(($selected-$LINES+3))
+  [ "$min" -le 0 ] && min=1
+  max=$(($min+$LINES-3))
+  i=0
+  for item in "${aitems[@]}"
+  do
+    i=$((i + 1))
+    [[ $i -ge $min ]] && [[ $i -le $max ]] || continue
+    if [[ $selected == "$i" ]]; then 
+      printf "\n\r\e[1;96m> %s                             \e[0m" "$i: $item"
+    else
+      printf "\n\r  %s                                   " "$i: $item"
+    fi
+  done
+  printf "\nSelect: $numselected                         "
+  tput sc
+  for ((i=0; i<=${#aitems[@]}; ++i)); do
+    tput cuu1
+    tput sc
+  done
+}
+
+_clearmenu () {
+  typeset nbitems=$1
+  printf "\r                                                                            "
+  for ((c=1; c<nbitems; ++c)); do
+    printf "\n\r                                                                             "
+  done
+  tput rc
+  tput sc
+  tput cnorm
+  tput ed
+  printf "\n"
+  stty echo
+  return
+}
+
+_domenu () {
+  typeset title="$1" subtitle="$2" items="$3" numselected=""
+  _showmenu "$1" "$2" "$3"
+  readarray -t aitems <<<"$items"
+  while true
+    do
+    stty -echo
+    read -r -sn1 t
+    case $t in
+      A) [ $selected != 1 ] && selected=$((selected - 1)) && \
+        _showmenu "$1" "$2" "$3" "$numselected";;
+      B) [ $selected != ${#aitems[@]} ] && selected=$((selected + 1)) && \
+        _showmenu "$1" "$2" "$3" "$numselected";;
+      [0-9]) numselected="$numselected$t"
+        [ "$numselected" != 0 ] && [ "$numselected" -le "${#aitems[@]}" ] || numselected=""
+        _showmenu "$1" "$2" "$3" "$numselected";;
+      $'\x7f') numselected=${numselected#?}
+        _showmenu "$1" "$2" "$3" "$numselected";;
+      "") [ "$numselected" ] && selected=$numselected
+        _clearmenu ${#aitems[@]}; return;;
+      q) selected="";_clearmenu ${#aitems[@]};return;;
+    esac
+    stty echo
+  done
+}
+
+bselect() {
+  typeset title subtitle items
+  trap ctrl_c INT
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -t|--title)
+        shift
+        [ "$1" ] && title=$1 || return 1
+        shift
+        ;;
+      -s|--subtitle)
+        shift
+        [ "$1" ] && subtitle=$1 || return 1
+        shift
+        ;;
+      -i|--items)
+        shift
+        [ "$1" ] && items="$1" || return 1
+        shift
+        ;;
+      *)
+        printf "usage: bselect [-t <title>] [-s <subtitle>] -i <items>\n"
+        printf "args :\n"
+        printf "-t, --title           menu title\n"
+        printf "-s, --subtitle        subtitle\n"
+        printf "-i, --items           menu items \\n separated\n"
+        return 1
+        ;;
+    esac
+  done
+  tput civis
+  _domenu "$title" "$subtitle" "$items"
+  trap - INT
+}
