@@ -1,10 +1,11 @@
+_stty_ori=$(stty -g)
 
 function ctrl_c {
-  stty echo
+  stty $_stty_ori
   read selected <<<"" # do a read or tty echo broken
-  tput cnorm
   tput rc
   tput ed
+  tput cnorm
   printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" Aborted
   echo
   exit
@@ -71,7 +72,7 @@ _domenu () {
         _showmenu "$1" "$2" "$items" "$nsel" "$filter";;
     esac
   done
-  stty echo
+  stty $_stty_ori
   tput cnorm
   printf "\n"
 }
