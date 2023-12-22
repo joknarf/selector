@@ -22,7 +22,8 @@ _showmenu() {
   while read item
   do
     i=$((i + 1))
-    [[ $i -ge $min ]] && [[ $i -le $max ]] || continue
+    [[ $i -ge $min ]] || continue
+    [[ $i -le $max ]] || break
     if [[ $nsel == "$i" ]]; then 
       printf "\n\e[1;96m> %-$((COLUMNS-2))s\e[0m" "$i: $item"
     else
