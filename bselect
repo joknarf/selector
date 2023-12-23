@@ -62,7 +62,7 @@ _domenu () {
           esac;;
       $'\x7f') filter=${filter%?}
         _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter";;
-      "")   
+      ""|$'\x0a'|$'\x0d')   
         #tput rc
         tput ed
         [ "$filter" ] && nsel=""
