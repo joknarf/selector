@@ -54,7 +54,7 @@ _domenu () {
     read -sn1 k
     case $k in
       $'\x1b')
-          read -sn2 -t.001 k
+          read -sn2 -t1 k
           case $k in 
             '[A') [ $nsel != 1 ] && nsel=$((nsel - 1)) && \
               _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter" </dev/null ;;
