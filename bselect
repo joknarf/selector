@@ -3,17 +3,17 @@ _stty_ori=$(stty -g)
 function ctrl_c {
   stty $_stty_ori
   read selected <<<"" # do a read or tty echo broken
-  tput rc
-  tput ed
+  #tput rc not workgin anywhere
+  tput ed #clear below
   tput cnorm
-  printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" Aborted
+  printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" aborted
   echo
   exit
 }
 
 _showmenu() {
   typeset title="$1" subtitle="$2" items="$3" nsel="$4" nbitems="$5" filter="$6" item i min max
-  tput sc
+  #tput sc not working anywhere
   [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%-$((COLUMNS-4))s\e[0;96m  %s\e[0m" "$title ($nbitems)"
 
   min=$(($nsel-$LINES+3))
@@ -32,7 +32,14 @@ _showmenu() {
     fi
   done <<<"$items"
   printf "\n$subtitle: %-$((COLUMNS-${#subtitle}-2))s" "$filter"
-  tput rc
+  #tput rc
+  size=$((nbitems+2))
+  : ${LINES:=24}
+  [ "$nbitems" -gt $LINES ] && size=$LINES
+  # back to top of menu
+  for ((i=1;i<size;i++));do
+    tput cuu1 # up one line
+  done
 }
 
 _domenu () {
@@ -56,7 +63,7 @@ _domenu () {
       $'\x7f') filter=${filter%?}
         _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter";;
       "")   
-        tput rc
+        #tput rc
         tput ed
         [ "$filter" ] && nsel=""
         [[ "$filter" = +([0-9]) ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
@@ -110,7 +117,7 @@ bselect() {
         ;;
     esac
   done
-  tput civis
+  tput civis #hide cursor
   _domenu "$title" "$subtitle" "$items"
   trap - INT
 }
