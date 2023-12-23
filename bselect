@@ -16,6 +16,8 @@ _showmenu() {
   #tput sc not working anywhere
   [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%-$((COLUMNS-4))s\e[0;96m  %s\e[0m" "$title ($nbitems)"
 
+  : ${LINES:=$(tput lines)}
+
   min=$(($nsel-$LINES+3))
   [ "$min" -le 0 ] && min=1
   max=$(($min+$LINES-3))
@@ -34,7 +36,6 @@ _showmenu() {
   printf "\n$subtitle: %-$((COLUMNS-${#subtitle}-2))s" "$filter"
   #tput rc
   size=$((nbitems+2))
-  : ${LINES:=24}
   [ "$nbitems" -gt $LINES ] && size=$LINES
   # back to top of menu
   for ((i=1;i<size;i++));do
@@ -46,7 +47,6 @@ _domenu () {
   typeset title="$1" subtitle="$2" items="$3" filter="" nsel=1 nbitems
   [ "$items" ] || return 1
   nbitems=$(echo "$items"|wc -l)
-  echo $nbitems
   _showmenu "$1" "$2" "$3" "$nsel" "$nbitems" ""
   stty -echo
   while true
