@@ -72,6 +72,7 @@ _domenu () {
         [ ! "$selected" ] && printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" "Not Found" && break
         [[ "$selected" != *$'\n'* ]] && break
         items="$selected"
+        selected=""
         nbitems=$(echo "$items" |wc -l)
         nsel=1
         filter=""
