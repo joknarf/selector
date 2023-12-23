@@ -44,8 +44,9 @@ _showmenu() {
 
 _domenu () {
   typeset title="$1" subtitle="$2" items="$3" filter="" nsel=1 nbitems
-  readarray -t aitems <<<"$items"
-  nbitems=${#aitems[@]}
+  [ "$items" ] || return 1
+  nbitems=$(echo "$items"|wc -l)
+  echo $nbitems
   _showmenu "$1" "$2" "$3" "$nsel" "$nbitems" ""
   stty -echo
   while true
@@ -66,13 +67,12 @@ _domenu () {
         #tput rc
         tput ed
         [ "$filter" ] && nsel=""
-        [[ "$filter" = +([0-9]) ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
-        [ "$nsel" ] && selected=${aitems[$((nsel-1))]}
+        [[ "$filter" =~ ^[0-9]+$ ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
+        [ "$nsel" ] && selected=$(echo "$items" |awk NR==$nsel)
         [ ! "$selected" ] && printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" "Not Found" && break
         [[ "$selected" != *$'\n'* ]] && break
         items="$selected"
-        readarray -t aitems <<<"$items"
-        nbitems=${#aitems[@]}
+        nbitems=$(echo "$items" |wc -l)
         nsel=1
         filter=""
         _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter"
