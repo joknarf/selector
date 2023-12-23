@@ -52,7 +52,7 @@ _domenu () {
   stty -echo
   while true
   do
-    read -sn1 k
+    IFS= read -sn1 k
     case $k in
       $'\x1b')
           read -sn2 -t1 k
@@ -64,8 +64,8 @@ _domenu () {
           esac;;
       $'\x7f') filter=${filter%?}
         _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter";;
-      ""|$'\x0a'|$'\x0d')   
-        #tput rc
+      $'\x0d')   
+        echo "=>$k<=" >>/tmp/o
         tput ed
         [ "$filter" ] && nsel=""
         [[ "$filter" =~ ^[0-9]+$ ]] && nsel=$filter || selected=$(echo "$items" |egrep "$filter")
@@ -79,7 +79,8 @@ _domenu () {
         filter=""
         _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter"
         ;;
-      *) filter="$filter$k"
+      #[a-zA-Z0-9/_?*\(\)\ .-]) 
+      [[:graph:]]|" ")  filter="$filter$k"
         _showmenu "$1" "$2" "$items" "$nsel" "$nbitems" "$filter";;
     esac
   done
