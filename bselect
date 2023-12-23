@@ -1,5 +1,3 @@
-_stty_ori=$(stty -g)
-_items=""
 
 function ctrl_c {
   stty $_stty_ori
@@ -7,14 +5,26 @@ function ctrl_c {
   tput ed #clear below
   tput cnorm
   unset _items
-  printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" aborted
+  printf "\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" aborted
   echo
   exit
 }
 
+_gomenu() {
+  typeset nbitems=$2 size i mov="tput cuu1"
+  [ "$1" = bottom ] && mov="printf \n"
+  size=$((nbitems+2))
+  [ "$size" -gt $LINES ] && size=$LINES
+  # back to top of menu
+  for ((i=1;i<size;i++));do
+    $mov
+  done
+  printf "\r" # begin of line
+}
+
 _showmenu() {
   typeset title="$1" subtitle="$2" nsel="$3" nbitems="$4" filter="$5" item i min max
-  #tput sc not working anywhere
+
   [ "$title" ] && printf "\e[0;92m✓ \e[0m\e[1;77m%s\e[0;96m  %s\e[0m" "$title ($nbitems)"
   tput el
   min=$(($nsel-$LINES+3))
@@ -35,22 +45,18 @@ _showmenu() {
   done <<<"$_items"
   printf "\n$subtitle: %s" "$filter"
   tput el
-  size=$((nbitems+2))
-  [ "$nbitems" -gt $LINES ] && size=$LINES
-  # back to top of menu
-  for ((i=1;i<size;i++));do
-    tput cuu1 # up one line
-  done
-  printf "\r" # begin of line
+  _gomenu top $nbitems
 }
 
 _domenu () {
   typeset title="$1" subtitle="$2" filter="" nsel=1 nbitems
+  
   [ "$_items" ] || return 1
+  _stty_ori=$(stty -g)
+  stty -echo
   nbitems=$(($(echo "$_items"|wc -l) + 0))
   : ${LINES:=$(tput lines)}
   _showmenu "$1" "$2" "$nsel" "$nbitems" ""
-  stty -echo
   while true
   do
     IFS= read -sn1 k
@@ -58,14 +64,17 @@ _domenu () {
       $'\x1b')
           read -sn2 -t1 k
           case $k in 
-            '[A') [ $nsel != 1 ] && nsel=$((nsel - 1)) && \
-              _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter" </dev/null ;;
-            '[B') filter="";[ $nsel != $nbitems ] && nsel=$((nsel + 1)) && \
+            '[A') #up
+              [ $nsel != 1 ] && nsel=$((nsel - 1)) && \
+              _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter" </dev/null;;
+            '[B') #down
+              filter="";[ $nsel != $nbitems ] && nsel=$((nsel + 1)) && \
               _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter" </dev/null;;
           esac;;
-      $'\x7f') filter=${filter%?}
+      $'\x7f') #backspace
+        filter=${filter%?}
         _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter";;
-      $'\x0d')   
+      $'\x0d'|'') #enter
         echo "=>$k<=" >>/tmp/o
         tput ed
         [ "$filter" ] && nsel=""
@@ -78,21 +87,23 @@ _domenu () {
         nbitems=$(echo "$_items" |wc -l)
         nsel=1
         filter=""
-        _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter"
-        ;;
-      #[a-zA-Z0-9/_?*\(\)\ .-]) 
-      [[:graph:]]|" ")  filter="$filter$k"
         _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter";;
+      [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
+        filter="$filter$k"
+        _gomenu bottom $nbitems
+        printf "$subtitle: %s" "$filter"
+        tput el
+        _gomenu top $nbitems
+#        _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter";;
     esac
   done
   stty $_stty_ori
   tput cnorm
-  printf "\n"
 }
 
 bselect() {
   typeset title subtitle
-  trap ctrl_c INT
+
   selected=""
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -121,6 +132,7 @@ bselect() {
         ;;
     esac
   done
+  trap ctrl_c INT
   tput civis #hide cursor
   _domenu "$title" "$subtitle"
   unset _items
