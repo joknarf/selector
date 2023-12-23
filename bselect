@@ -14,8 +14,8 @@ function ctrl_c {
 _showmenu() {
   typeset title="$1" subtitle="$2" items="$3" nsel="$4" nbitems="$5" filter="$6" item i min max
   #tput sc not working anywhere
-  [ "$title" ] && printf "\r\e[0;92m✓ \e[0m\e[1;77m%-$((COLUMNS-4))s\e[0;96m  %s\e[0m" "$title ($nbitems)"
-
+  [ "$title" ] && printf "\e[0;92m✓ \e[0m\e[1;77m%s\e[0;96m  %s\e[0m" "$title ($nbitems)"
+  tput el
   min=$(($nsel-$LINES+3))
   [ "$min" -le 0 ] && min=1
   max=$(($min+$LINES-3))
@@ -32,14 +32,15 @@ _showmenu() {
     fi
     tput el #clear end of line
   done <<<"$items"
-  printf "\n$subtitle: %-$((COLUMNS-${#subtitle}-2))s" "$filter"
-  #tput rc
+  printf "\n$subtitle: %s" "$filter"
+  tput el
   size=$((nbitems+2))
   [ "$nbitems" -gt $LINES ] && size=$LINES
   # back to top of menu
   for ((i=1;i<size;i++));do
     tput cuu1 # up one line
   done
+  printf "\r" # begin of line
 }
 
 _domenu () {
