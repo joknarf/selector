@@ -26,10 +26,11 @@ _showmenu() {
     [[ $i -ge $min ]] || continue
     [[ $i -le $max ]] || break
     if [[ $nsel == "$i" ]]; then 
-      printf "\n\e[1;96m> %-$((COLUMNS-2))s\e[0m" "$i: $item"
+      printf "\n\e[1;96m> %s\e[0m" "$i: $item"
     else
-      printf "\n  %-$((COLUMNS-2))s" "$i: $item"
+      printf "\n  %s" "$i: $item"
     fi
+    tput el #clear end of line
   done <<<"$items"
   printf "\n$subtitle: %-$((COLUMNS-${#subtitle}-2))s" "$filter"
   #tput rc
