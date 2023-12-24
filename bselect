@@ -117,7 +117,6 @@ bselect() {
     esac
     shift 2
   done
-  echo $_items
   trap ctrl_c INT
   tput civis #hide cursor
   _domenu "$prompt"
