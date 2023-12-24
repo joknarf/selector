@@ -5,14 +5,15 @@ function ctrl_c {
   tput ed #clear below
   tput cnorm
   unset _items
-  printf "\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" aborted
+  printf "\e[0;91mx \e[0m\e[1;77m%s\e[0m" aborted
+  tput el
   echo
   exit
 }
 
 _gomenu() {
   typeset nbitems=$2 size i mov="tput cuu1"
-  [ "$1" = bottom ] && mov="printf \n"
+  [ "$1" = bottom ] && mov="echo"
   size=$((nbitems+2))
   [ "$size" -gt $LINES ] && size=$LINES
   # back to top of menu
