@@ -84,7 +84,7 @@ _domenu () {
         [[ "$selected" != *$'\n'* ]] && break
         _items="$selected"
         selected=""
-        nbitems=$(echo "$_items" |wc -l)
+        nbitems=$(($(echo "$_items"|wc -l) + 0))
         nsel=1
         filter=""
         _showmenu "$1" "$nsel" "$nbitems" "$filter";;
