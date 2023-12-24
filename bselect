@@ -43,9 +43,10 @@ _showmenu() {
 }
 
 _domenu () {
-  typeset prompt="$1" filter="" nsel=1 nbitems
-  
+  typeset prompt="$1" filter="" nsel=1 nbitems o=n
+  [ "$ZSH_VERSION" ] && o=k
   [ "$_items" ] || return 1
+
   _stty_ori=$(stty -g)
   stty -echo
   nbitems=$(($(echo "$_items"|wc -l) + 0))
@@ -53,10 +54,10 @@ _domenu () {
   _showmenu "$1" "$nsel" "$nbitems" ""
   while true
   do
-    IFS= read -sn1 k >/dev/null
+    IFS= read -s${o}1 k >/dev/null
     case $k in
       $'\x1b')
-          read -sn2 -t1 k >/dev/null
+          read -s${o}2 -t1 k >/dev/null
           case $k in 
             '[A') #up
               filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
