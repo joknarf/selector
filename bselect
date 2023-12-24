@@ -16,7 +16,7 @@ _showmenu() {
 
   printf "$prompt ($nbitems): %s" "$filter"
   tput el
-
+  w=$nbitems;w=${#w}
   min=$(($nsel-$LINES+2))
   [ "$min" -le 0 ] && min=1
   max=$(($min+$LINES-2))
@@ -27,9 +27,9 @@ _showmenu() {
     [[ $i -ge $min ]] || continue
     [[ $i -le $max ]] || break
     if [[ $nsel == "$i" ]]; then 
-      printf "\n\e[1;96m> %s\e[0m" "$i: $item"
+      printf "\n\e[1;96m> %${w}s: %s\e[0m" $i "$item"
     else
-      printf "\n  %s" "$i: $item"
+      printf "\n  %${w}s: %s" $i "$item"
     fi
     tput el #clear end of line
   done <<<"$_items"
@@ -53,13 +53,13 @@ _domenu () {
   _showmenu "$1" "$nsel" "$nbitems" ""
   while true
   do
-    IFS= read -sn1 k
+    IFS= read -sn1 k >/dev/null
     case $k in
       $'\x1b')
-          read -sn2 -t1 k
+          read -sn2 -t1 k >/dev/null
           case $k in 
             '[A') #up
-              [ $nsel != 1 ] && nsel=$((nsel - 1)) && \
+              filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
               _showmenu "$1" "$nsel" "$nbitems" "$filter" </dev/null;;
             '[B') #down
               filter="";[ $nsel != $nbitems ] && nsel=$((nsel + 1)) && \
