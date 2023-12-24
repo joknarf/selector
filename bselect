@@ -11,26 +11,15 @@ function ctrl_c {
   exit
 }
 
-_gomenu() {
-  typeset nbitems=$2 size i mov="tput cuu1"
-  [ "$1" = bottom ] && mov="echo"
-  size=$((nbitems+2))
-  [ "$size" -gt $LINES ] && size=$LINES
-  # back to top of menu
-  for ((i=1;i<size;i++));do
-    $mov
-  done
-  printf "\r" # begin of line
-}
-
 _showmenu() {
-  typeset title="$1" subtitle="$2" nsel="$3" nbitems="$4" filter="$5" item i min max
+  typeset prompt="$1" nsel="$2" nbitems="$3" filter="$4" item i min max
 
-  [ "$title" ] && printf "\e[0;92m✓ \e[0m\e[1;77m%s\e[0;96m  %s\e[0m" "$title ($nbitems)"
+  printf "$prompt ($nbitems): %s" "$filter"
   tput el
-  min=$(($nsel-$LINES+3))
+
+  min=$(($nsel-$LINES+2))
   [ "$min" -le 0 ] && min=1
-  max=$(($min+$LINES-3))
+  max=$(($min+$LINES-2))
   i=0
   while read item
   do
@@ -44,20 +33,24 @@ _showmenu() {
     fi
     tput el #clear end of line
   done <<<"$_items"
-  printf "\n$subtitle: %s" "$filter"
-  tput el
-  _gomenu top $nbitems
+  size=$((nbitems+1))
+  [ "$size" -gt $LINES ] && size=$LINES
+  # back to top of menu
+  for ((i=1;i<size;i++));do
+    tput cuu1
+  done
+  printf "\r" # begin of line
 }
 
 _domenu () {
-  typeset title="$1" subtitle="$2" filter="" nsel=1 nbitems
+  typeset prompt="$1" filter="" nsel=1 nbitems
   
   [ "$_items" ] || return 1
   _stty_ori=$(stty -g)
   stty -echo
   nbitems=$(($(echo "$_items"|wc -l) + 0))
   : ${LINES:=$(tput lines)}
-  _showmenu "$1" "$2" "$nsel" "$nbitems" ""
+  _showmenu "$1" "$nsel" "$nbitems" ""
   while true
   do
     IFS= read -sn1 k
@@ -67,16 +60,22 @@ _domenu () {
           case $k in 
             '[A') #up
               [ $nsel != 1 ] && nsel=$((nsel - 1)) && \
-              _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter" </dev/null;;
+              _showmenu "$1" "$nsel" "$nbitems" "$filter" </dev/null;;
             '[B') #down
               filter="";[ $nsel != $nbitems ] && nsel=$((nsel + 1)) && \
-              _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter" </dev/null;;
+              _showmenu "$1" "$nsel" "$nbitems" "$filter" </dev/null;;
           esac;;
       $'\x7f') #backspace
         filter=${filter%?}
-        _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter";;
+        printf "$prompt ($nbitems): %s" "$filter"
+        tput el
+        printf "\r"
+        ;;
+      [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
+        filter="$filter$k"
+        printf "$prompt ($nbitems): %s\r" "$filter"
+        ;;
       $'\x0d'|'') #enter
-        echo "=>$k<=" >>/tmp/o
         tput ed
         [ "$filter" ] && nsel=""
         [[ "$filter" =~ ^[0-9]+$ ]] && nsel=$filter || selected=$(echo "$_items" |egrep "$filter")
@@ -88,14 +87,7 @@ _domenu () {
         nbitems=$(echo "$_items" |wc -l)
         nsel=1
         filter=""
-        _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter";;
-      [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
-        filter="$filter$k"
-        _gomenu bottom $nbitems
-        printf "$subtitle: %s" "$filter"
-        tput el
-        _gomenu top $nbitems
-#        _showmenu "$1" "$2" "$nsel" "$nbitems" "$filter";;
+        _showmenu "$1" "$nsel" "$nbitems" "$filter";;
     esac
   done
   stty $_stty_ori
@@ -103,39 +95,32 @@ _domenu () {
 }
 
 bselect() {
-  typeset title subtitle
+  typeset prompt
 
+  prompt="select"
   selected=""
   while [ $# -gt 0 ]; do
     case "$1" in
-      -t|--title)
-        shift
-        [ "$1" ] && title=$1 || return 1
-        shift
-        ;;
-      -s|--subtitle)
-        shift
-        [ "$1" ] && subtitle=$1 || return 1
-        shift
+      -p|--prompt)
+        [ "$2" ] && prompt=$2 || return 1
         ;;
       -i|--items)
-        shift
-        [ "$1" ] && _items="$1" || return 1
-        shift
-        ;;
+        [ "$2" ] && _items="$2" || return 1
+         ;;
       *)
         printf "usage: bselect [-t <title>] [-s <subtitle>] -i <items>\n"
         printf "args :\n"
-        printf "-t, --title           menu title\n"
-        printf "-s, --subtitle        subtitle\n"
-        printf "-i, --items           menu items \\n separated\n"
+        printf "%s\n" "-t, --prompt          menu prompt"
+        printf "%s\n" "-i, --items           menu items \n separated"
         return 1
         ;;
     esac
+    shift 2
   done
+  echo $_items
   trap ctrl_c INT
   tput civis #hide cursor
-  _domenu "$title" "$subtitle"
+  _domenu "$prompt"
   unset _items
   trap - INT
 }
