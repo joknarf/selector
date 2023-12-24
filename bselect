@@ -108,11 +108,15 @@ bselect() {
       -i|--items)
         [ "$2" ] && _items="$2" || return 1
          ;;
+      -f|--file)
+        [ "$2" ] && _items="$(cat $2)" || return 1
+         ;;
       *)
-        printf "usage: bselect [-t <title>] [-s <subtitle>] -i <items>\n"
+        printf "usage: bselect [-p <prompt>] -i <items>|-f <itemfile>\n"
         printf "args :\n"
-        printf "%s\n" "-t, --prompt          menu prompt"
-        printf "%s\n" "-i, --items           menu items \n separated"
+        printf "%s\n" "  -p, --prompt          menu prompt"
+        printf "%s\n" "  -i, --items           menu items \n separated"
+        printf "%s\n" "  -f, --file            file with items"
         return 1
         ;;
     esac
