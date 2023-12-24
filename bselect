@@ -54,10 +54,10 @@ _domenu () {
   _showmenu "$1" "$nsel" "$nbitems" ""
   while true
   do
-    IFS= read -s${o}1 k >/dev/null
+    IFS= read -s${o}1 k
     case $k in
       $'\x1b')
-          read -s${o}2 -t1 k >/dev/null
+          read -s${o}2 -t1 k
           case $k in 
             '[A') #up
               filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
