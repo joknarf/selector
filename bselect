@@ -76,7 +76,7 @@ _domenu () {
         filter="$filter$k"
         printf "$prompt ($nbitems): %s\r" "$filter"
         ;;
-      $'\x0d'|'') #enter
+      $'\x0d'|''|$'\n') #enter
         tput ed
         [ "$filter" ] && nsel=""
         [[ "$filter" =~ ^[0-9]+$ ]] && nsel=$filter || selected=$(echo "$_items" |egrep "$filter")
