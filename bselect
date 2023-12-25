@@ -1,8 +1,8 @@
 #!/bin/bash
 
 function ctrl_c {
-  tput ich 14
-  printf "(Esc to exit)\r"
+  tput ich 16
+  printf "(Ctl-X to exit)\r"
   return 0
 }
 
