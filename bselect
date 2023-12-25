@@ -1,14 +1,15 @@
+#!/bin/bash
 
 function ctrl_c {
   stty $_stty_ori
+  trap - INT
   read selected <<<"" # do a read or tty echo broken
   tput ed #clear below
   tput cnorm
   unset _items
-  printf "\e[0;91mx \e[0m\e[1;77m%s\e[0m" aborted
+  printf "\e[0;91mx \e[0m\e[1;77m%s\e[0m" exited
   tput el
-  echo
-  exit
+  kill -SIGINT $$ #break the current read
 }
 
 _showmenu() {
@@ -46,7 +47,7 @@ _domenu () {
   typeset prompt="$1" filter="" nsel=1 nbitems o=n
   [ "$ZSH_VERSION" ] && o=k
   [ "$_items" ] || return 1
-
+  tput civis
   _stty_ori=$(stty -g)
   stty -echo
   nbitems=$(($(echo "$_items"|wc -l) + 0))
@@ -57,14 +58,14 @@ _domenu () {
     IFS= read -s${o}1 k
     case $k in
       $'\x1b')
-          read -s${o}2 -t1 k
+          read -s${o}2 -t.001 k
           case $k in 
             '[A') #up
               filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
-              _showmenu "$1" "$nsel" "$nbitems" "$filter" </dev/null;;
+              _showmenu "$1" "$nsel" "$nbitems" "$filter";;
             '[B') #down
               filter="";[ $nsel != $nbitems ] && nsel=$((nsel + 1)) && \
-              _showmenu "$1" "$nsel" "$nbitems" "$filter" </dev/null;;
+              _showmenu "$1" "$nsel" "$nbitems" "$filter";;
           esac;;
       $'\x7f') #backspace
         filter=${filter%?}
@@ -76,6 +77,7 @@ _domenu () {
         filter="$filter$k"
         printf "$prompt ($nbitems): %s\r" "$filter"
         ;;
+      $'\x06') echo "Ctl F";;
       $'\x0d'|''|$'\n') #enter
         tput ed
         [ "$filter" ] && nsel=""
@@ -89,6 +91,7 @@ _domenu () {
         nsel=1
         filter=""
         _showmenu "$1" "$nsel" "$nbitems" "$filter";;
+      *) tput ed;break;
     esac
   done
   stty $_stty_ori
@@ -123,8 +126,10 @@ bselect() {
     shift 2
   done
   trap ctrl_c INT
-  tput civis #hide cursor
-  _domenu "$prompt"
+  _domenu "$prompt" >&2
   unset _items
   trap - INT
+  printf "$selected"
 }
+
+[ "$1" ] && bselect "$@"
