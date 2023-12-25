@@ -52,7 +52,7 @@ _domenu () {
     IFS= read -s${o}1 k
     case $k in
       $'\x1b')
-          read -s${o}2 -t.001 k
+          read -s${o}2 -t1 k
           case $k in 
             '[A') #up
               filter="";[ $nsel != 1 ] && nsel=$((nsel - 1)) && \
@@ -70,7 +70,9 @@ _domenu () {
         ;;
       [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
         filter="$filter$k"
-        printf "$prompt ($nbitems): %s\r" "$filter"
+        printf "$prompt ($nbitems): %s" "$filter"
+        tput el
+        printf "\r"
         ;;
       $'\x06') echo "Ctl F";;
       $'\x0d'|''|$'\n') #enter
