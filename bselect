@@ -48,7 +48,6 @@ _domenu () {
   [ "$ZSH_VERSION" ] && o=k
   [ "$_items" ] || return 1
   tput civis
-  _stty_ori=$(stty -g)
   stty -echo
   printf "\e[?7l"
   nbitems=$(($(echo "$_items"|wc -l) + 0))
@@ -67,6 +66,7 @@ _domenu () {
             '[B') #down
               filter="";[ $nsel != $nbitems ] && nsel=$((nsel + 1)) && \
               _showmenu "$1" "$nsel" "$nbitems" "$filter";;
+            *) tput ed;break;;
           esac;;
       $'\x7f') #backspace
         filter=${filter%?}
@@ -95,7 +95,6 @@ _domenu () {
       *) tput ed;break;
     esac
   done
-  stty $_stty_ori
   tput cnorm
 }
 
@@ -126,10 +125,12 @@ bselect() {
     esac
     shift 2
   done
+  _stty_ori=$(stty -g)
   trap ctrl_c INT
   _domenu "$prompt" >&2
-  unset _items
   trap - INT
+  stty $_stty_ori
+  unset _items
   [ "$selected" ] && printf "$selected" && return 0
   return 1
 }
