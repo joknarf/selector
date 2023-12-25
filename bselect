@@ -129,7 +129,8 @@ bselect() {
   _domenu "$prompt" >&2
   unset _items
   trap - INT
-  printf "$selected"
+  [ "$selected" ] && printf "$selected" && return 0
+  return 1
 }
 
 [ "$1" ] && bselect "$@"
