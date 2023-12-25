@@ -1,15 +1,9 @@
 #!/bin/bash
 
 function ctrl_c {
-  stty $_stty_ori
-  trap - INT
-  read selected <<<"" # do a read or tty echo broken
-  tput ed #clear below
-  tput cnorm
-  unset _items
-  printf "\e[0;91mx \e[0m\e[1;77m%s\e[0m" exited
-  tput el
-  kill -SIGINT $$ #break the current read
+  tput ich 14
+  printf "(Esc to exit)\r"
+  return 0
 }
 
 _showmenu() {
