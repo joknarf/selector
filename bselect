@@ -104,7 +104,7 @@ function _domenu
         [ "$filter" ] && _nsel=""
         [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || selected=$(echo "$_items" |egrep "$filter")
         [ "$_nsel" ] && selected=$(echo "$_items" |awk NR==$_nsel)
-        [ ! "$selected" ] && printf "\n\e[0;91mx \e[0m\e[1;77m%-$((COLUMS-3))s\e[0m" "Not Found" && break
+        [ ! "$selected" ] && break
         [[ "$selected" != *$'\n'* ]] && break
         _items="$selected"
         selected=""
@@ -115,8 +115,8 @@ function _domenu
       *) break;
     esac
   done
-  tput ed
   unset _nsel
+  tput ed
   tput cnorm
 }
 
