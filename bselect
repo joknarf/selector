@@ -30,7 +30,7 @@ _showmenu() {
     if [[ $nsel == "$i" ]]; then 
       printf "\n\e[1;96m> %${w}s: %s\e[0m" $i "$item"
     else
-      printf "\n  %${w}s: %s" $i "$item"
+      printf "\n\e[32m  %${w}s: \e[94m%s\e[0m" $i "$item"
     fi
     tput el #clear end of line
   done <<<"$_items"
@@ -50,6 +50,7 @@ _domenu () {
   tput civis
   _stty_ori=$(stty -g)
   stty -echo
+  printf "\e[?7l"
   nbitems=$(($(echo "$_items"|wc -l) + 0))
   : ${LINES:=$(tput lines)}
   _showmenu "$1" "$nsel" "$nbitems" ""
