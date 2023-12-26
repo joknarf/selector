@@ -1,19 +1,25 @@
 #!/bin/bash
 
 # no proper way to restore tty on trap
-function ctrl_c {
+function ctrl_c
+{
   tput ich 16
   printf "(Ctl-X to exit)\r"
 }
 
-function _menuprompt {
-  printf "$1 ($2): %s" "$3"
+function _menuprompt
+{
+  typeset form filter=${3:-$_nsel}
+  form="$1 ($2): %s"
+  [ "$_powerline" ] && form="\e[30m\e[100m\e[97m $1 ($2) \e[0m\e[90m\e[100m\e[49m\e[0m %s"
+  printf "$form" "$filter"
   tput el
   printf "\r"
 }
 
-function _showmenu {
-  typeset prompt="$1" nsel="$2" nbitems="$3" filter="$4" item i min max
+function _showmenu 
+{
+  typeset prompt="$1" nsel="$2" nbitems="$3" filter="$4" item i min max sel
 
   _menuprompt "$prompt" "$nbitems" "$filter"
   w=$nbitems;w=${#w}
@@ -21,24 +27,29 @@ function _showmenu {
   [ "$min" -le 0 ] && min=1
   max=$(($min+$LINES-2))
   i=0
-  while read item
+  sel="\n\e[1;96m>%${w}s  %s\e[0m"
+  sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[1;96m %s\e[0m"
+  [ "$_powerline" ] && sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m\e[0m\e[1;96m%s\e[0m"
+  echo "$_items" |while read item
   do
     i=$((i + 1))
     [[ $i -ge $min ]] || continue
     [[ $i -le $max ]] || break
     if [[ $nsel == "$i" ]]; then 
-      printf "\n\e[1;96m> %${w}s: %s\e[0m" $i "$item"
+      printf "$sel" $i "$item"
+      #printf "\n\e[1;96m> %${w}s  %s\e[0m" $i "$item"
     else
-      printf "\n\e[32m  %${w}s: \e[94m%s\e[0m" $i "$item"
+      printf "\n\e[32m %${w}s  \e[94m%s\e[0m" $i "$item"
     fi
     tput el #clear end of line
-  done <<<"$_items"
+  done
   size=$((nbitems+1))
   [ "$size" -gt $LINES ] && size=$LINES
   # back to top of menu
-  for ((i=1;i<size;i++));do
-    tput cuu1
-  done
+  i=1;while [ $i -lt $size ];do
+    echo cuu1
+    i=$((i + 1))
+  done | tput -S
   printf "\r" # begin of line
 }
 
@@ -120,22 +131,25 @@ function _domenu
   tput cnorm
 }
 
-bselect() {
+function bselect
+{
   typeset prompt
 
   prompt="select"
   selected=""
+  [ "$1" = "-P" ] && _powerline=1 && shift
+  [ "$ps1_nopw" = 0 ] && _powerline=1
   while [ $# -gt 0 ]; do
     case "$1" in
       -p|--prompt)
-        [ "$2" ] && prompt=$2 || return 1
+        [ "$2" ] && prompt="$2" || return 1
         ;;
       -i|--items)
         [ "$2" ] && _items="$2" || return 1
-         ;;
+        ;;
       -f|--file)
         [ "$2" ] && _items="$(cat $2)" || return 1
-         ;;
+        ;;
       *)
         printf "usage: bselect [-p <prompt>] -i <items>|-f <itemfile>\n"
         printf "args :\n"
