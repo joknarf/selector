@@ -19,13 +19,15 @@ function _menuprompt
 
 function _showmenu 
 {
-  typeset prompt="$1" nsel="$2" nbitems="$3" filter="$4" item i min max sel
+  typeset prompt="$1" nsel="$2" nbitems="$3" filter="$4" item i min max sel lines
 
   _menuprompt "$prompt" "$nbitems" "$filter"
   w=$nbitems;w=${#w}
-  min=$(($nsel-$LINES+2))
+  lines=${_maxlines:-$LINES}
+  [ $lines -gt $LINES ] && lines=$LINES
+  min=$(($nsel-$lines+2))
   [ "$min" -le 0 ] && min=1
-  max=$(($min+$LINES-2))
+  max=$(($min+$lines-2))
   i=0
   sel="\n\e[1;96m>%${w}s  %s\e[0m"
   sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[1;96m %s\e[0m"
@@ -44,7 +46,7 @@ function _showmenu
     tput el #clear end of line
   done
   size=$((nbitems+1))
-  [ "$size" -gt $LINES ] && size=$LINES
+  [ "$size" -gt $lines ] && size=$lines
   # back to top of menu
   i=1;while [ $i -lt $size ];do
     echo cuu1
@@ -55,9 +57,11 @@ function _showmenu
 
 function _select
 {
-  typeset prompt="$1" newsel="$2" nbitems="$3" filter="$4"
+  typeset prompt="$1" newsel="$2" nbitems="$3" filter="$4" lines
 
-  _nsel=$((newsel))
+  lines=${_maxlines:-$LINES}
+  [ $lines -gt $LINES ] && lines=$LINES
+  _nsel=$(($newsel))
   [ $_nsel -lt 1 ] && _nsel=1
   [ $_nsel -ge $nbitems ] && _nsel=$nbitems
   _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
@@ -74,29 +78,30 @@ function _domenu
   printf "\e[?7l"
   nbitems=$(($(echo "$_items"|wc -l) + 0))
   : ${LINES:=$(tput lines)}
+  [ "$_maxlines" -gt 2 ] || unset _maxlines
   _showmenu "$prompt" "$_nsel" "$nbitems" ""
   while true
   do
-    IFS= read -s${o}1 k
+    IFS= read -rs${o}1 k
     case $k in
       $'\x1b')
           filter=""
-          read -s${o}2 -t1 k
+          read -rs${o}2 -t1 k
           case $k in 
             '[A') #up
-              _select "$prompt" "_nsel - 1" "$nbitems" "$filter";;
+              _select "$prompt" "_nsel-1" "$nbitems" "$filter";;
             '[B') #down
-              _select "$prompt" "_nsel + 1" "$nbitems" "$filter";;
+              _select "$prompt" "_nsel+1" "$nbitems" "$filter";;
             '[H'|'[D') #home or arrowleft
               _select "$prompt" "1" "$nbitems" "$filter";;
             '[F'|'[C') #end or arrowright
               _select "$prompt" "nbitems" "$nbitems" "$filter";;
             '[6') #pagedn [6~
-              read -s${o}1 -t1 k
-              _select "$prompt" "_nsel+LINES-1" "$nbitems" "$filter";;
+              read -rs${o}1 -t1 k
+              _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
             '[5') #pageup [5~
-              read -s${o}1 -t1 k
-              _select "$prompt" "_nsel-LINES+1" "$nbitems" "$filter";;
+              read -rs${o}1 -t1 k
+              _select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
             *) break;;
           esac;;
       $'\x7f') #backspace
@@ -105,10 +110,15 @@ function _domenu
       [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
         filter="$filter$k"
         _menuprompt "$prompt" "$nbitems" "$filter";;
-      $'\x06') # Ctl-F
-        _select "$prompt" "_nsel+LINES-1" "$nbitems" "$filter";;
-      $'\x02') # Ctl-B
-        _select "$prompt" "_nsel-LINES+1" "$nbitems" "$filter";;
+      $'\x06') # Ctl-F => pgdn
+        _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
+      $'\x02') # Ctl-B => pgup
+        _select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
+      $'\x0c') # Ctl-L => refresh
+        _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
+      $'\x01') # Ctl-A => all
+        unset _maxlines
+        _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;        
       $'\x0d'|''|$'\n') #enter
         tput ed
         [ "$filter" = ":q" ] && break
@@ -123,7 +133,7 @@ function _domenu
         _nsel=1
         filter=""
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
-      *) break;
+      *) echo "$k" >/tmp/o;break;
     esac
   done
   unset _nsel
@@ -137,6 +147,7 @@ function bselect
 
   prompt="select"
   selected=""
+  _maxlines=0
   [ "$1" = "-P" ] && _powerline=1 && shift
   [ "$ps1_nopw" = 0 ] && _powerline=1
   while [ $# -gt 0 ]; do
@@ -149,6 +160,9 @@ function bselect
         ;;
       -f|--file)
         [ "$2" ] && _items="$(cat $2)" || return 1
+        ;;
+      -m|--max)
+        [ "$2" ] && _maxlines="$(($2+1))" || return 1
         ;;
       *)
         printf "usage: bselect [-p <prompt>] -i <items>|-f <itemfile>\n"
