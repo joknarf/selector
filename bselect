@@ -9,9 +9,9 @@ function ctrl_c
 
 function _menuprompt
 {
-  typeset form filter=${3:-$_nsel}
-  form="$1 ($2): %s"
-  [ "$_powerline" ] && form="\e[30m\e[100m\e[97m $1 ($2) \e[0m\e[90m\e[100m\e[49m\e[0m %s"
+  typeset form filter=${3:-$_nsel/$2}
+  form="$1: %s"
+  [ "$_powerline" ] && form="\e[30m\e[100m\e[97m $1 \e[0m\e[90m\e[100m\e[49m\e[0m %s"
   printf "$form" "$filter"
   tput el
   printf "\r"
