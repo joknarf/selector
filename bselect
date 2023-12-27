@@ -11,7 +11,7 @@ function _menuprompt
 {
   typeset form filter=${3:-$_nsel/$2}
   form="$1: %s"
-  [ "$_powerline" ] && form="\e[30m\e[100m\e[97m $1 \e[0m\e[90m\e[100m\e[49m\e[0m %s"
+  [ "$_powerline" = "y" ] && form="\e[30m\e[100m\e[97m $1 \e[0m\e[90m\e[100m\e[49m\e[0m %s"
   printf "$form" "$filter"
   tput el
   printf "\r"
@@ -29,9 +29,8 @@ function _showmenu
   [ "$min" -le 0 ] && min=1
   max=$(($min+$lines-2))
   i=0
-  sel="\n\e[1;96m>%${w}s  %s\e[0m"
   sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[1;96m %s\e[0m"
-  [ "$_powerline" ] && sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m\e[0m\e[1;96m%s\e[0m"
+  [ "$_powerline" = y ] && sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m\e[0m\e[1;96m%s\e[0m"
   echo "$_items" |while read item
   do
     i=$((i + 1))
@@ -39,7 +38,6 @@ function _showmenu
     [[ $i -le $max ]] || break
     if [[ $nsel == "$i" ]]; then 
       printf "$sel" $i "$item"
-      #printf "\n\e[1;96m> %${w}s  %s\e[0m" $i "$item"
     else
       printf "\n\e[32m %${w}s  \e[94m%s\e[0m" $i "$item"
     fi
@@ -149,8 +147,7 @@ function bselect
   prompt="select"
   selected=""
   _maxlines=0
-  [ "$1" = "-P" ] && _powerline=1 && shift
-  [ "$ps1_nopw" = 0 ] && _powerline=1
+  _powerline=y
   while [ $# -gt 0 ]; do
     case "$1" in
       -p|--prompt)
@@ -165,12 +162,16 @@ function bselect
       -m|--max)
         [ "$2" ] && _maxlines="$(($2+1))" || return 1
         ;;
+      -P|--powerline)
+        [ "$2" ] && _powerline="$2" || return 1
+        ;;
       *)
-        printf "usage: bselect [-p <prompt>] -i <items>|-f <itemfile>\n"
+        printf "usage: bselect [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]\n"
         printf "args :\n"
         printf "%s\n" "  -p, --prompt          menu prompt"
         printf "%s\n" "  -i, --items           menu items \n separated"
         printf "%s\n" "  -f, --file            file with items"
+        printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
         return 1
         ;;
     esac
