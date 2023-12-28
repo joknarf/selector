@@ -160,7 +160,7 @@ function _domenu
   tput cnorm
 }
 
-function bselect
+function selector
 {
   typeset prompt
 
@@ -208,4 +208,4 @@ function bselect
   return 1
 }
 
-[ "$1" ] && bselect "$@"
+[ "$1" ] && selector "$@"
