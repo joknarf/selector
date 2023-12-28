@@ -157,6 +157,7 @@ function _domenu
   done
   selected_idx=$_nsel
   unset _nsel
+  unset _aitems
   tput ed
   tput cnorm
 }

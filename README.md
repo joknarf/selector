@@ -13,6 +13,9 @@ args :
   -P, --powerline       y or n, powerline symbol usage
 ```
 
+selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)
+When sourced, the selected item is available as `$selected` and index as `$selected_idx`
+
 ## demo
 
 ![selector](https://github.com/joknarf/selector/assets/10117818/586afdf3-fe0e-4801-b39e-db8efce6918c)
@@ -21,14 +24,15 @@ args :
 
 |key       | action                          |
 |----------|---------------------------------|
-|down      | select nex item                 | 
-|up        | select prev item                |
-|right/End | select last item                |
-|left/Home | select first item               | 
-|pgup/Ctl-F| next page                       |
-|pgdn/Ctl-B| previous page                   |
-|ctl-X     | Exit                            |
-|enter     | select item/exit or apply filter|
+|Down      | select nex item                 | 
+|Up        | select prev item                |
+|Right/End | select last item                |
+|Left/Home | select first item               | 
+|PgUp/Ctl-F| next page                       |
+|PgDn/Ctl-B| previous page                   |
+|Ctl-X     | Exit                            |
+|Ctl-A     | Use all screen to display menu  |
+|Enter     | select item/exit or apply filter|
 
 * filter pattern can be applied entering text (ext regexp)
 * selection can be done entering item number
