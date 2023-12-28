@@ -2,6 +2,8 @@
 
 Shell interactive menu (bash/zsh/ksh compatible)
 
+![image](https://github.com/joknarf/selector/assets/10117818/c3c782eb-ad34-4c31-b806-fbd30270f03a)
+
 ## usage
 
 ```
