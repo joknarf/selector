@@ -155,6 +155,7 @@ function _domenu
       *) echo "$k" >/tmp/o;break;
     esac
   done
+  selected_idx=$_nsel
   unset _nsel
   tput ed
   tput cnorm
@@ -186,7 +187,7 @@ function selector
         [ "$2" ] && _powerline="$2" || return 1
         ;;
       *)
-        printf "usage: bselect [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]\n"
+        printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]\n"
         printf "args :\n"
         printf "%s\n" "  -p, --prompt          menu prompt"
         printf "%s\n" "  -i, --items           menu items \n separated"
