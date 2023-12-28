@@ -10,6 +10,7 @@ args :
   -p, --prompt          menu prompt
   -i, --items           menu items \n separated
   -f, --file            file with items
+  -F, --filter          regexp pattern filter items
   -P, --powerline       y or n, powerline symbol usage
 ```
 

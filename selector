@@ -164,7 +164,7 @@ function _domenu
 
 function selector
 {
-  typeset prompt
+  typeset prompt filter
 
   prompt="select"
   selected=""
@@ -187,18 +187,23 @@ function selector
       -P|--powerline)
         [ "$2" ] && _powerline="$2" || return 1
         ;;
+      -F|--filter)
+        [ "$2" ] && filter="$2" || return 1
+        ;;
       *)
         printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]\n"
         printf "args :\n"
         printf "%s\n" "  -p, --prompt          menu prompt"
         printf "%s\n" "  -i, --items           menu items \n separated"
         printf "%s\n" "  -f, --file            file with items"
+        printf "%s\n" "  -F, --filter          regexp pattern filter items"
         printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
         return 1
         ;;
     esac
     shift 2
   done
+  [ "$filter" ] && _items=$(printf "%s" "$_items" |egrep "$filter")
   _stty_ori=$(stty -g)
   trap ctrl_c INT
   _domenu "$prompt" >&2
