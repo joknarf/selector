@@ -72,8 +72,14 @@ function _select
 
 function _items_split
 {
-  typeset i=1 item
+  typeset filter="$1" i=1 item
 
+  [ "$filter" ] && {
+    _nsel=""
+    [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(printf "%s" "$_items" |egrep -- "$filter")"
+  }
+  [ "$_nsel" ] && _items=${_aitems[$_nsel]}
+  _nsel=1
   unset _aitems
   while read item;do
     _aitems[$i]="$item"
@@ -81,17 +87,16 @@ function _items_split
   done <<EOT
 $_items
 EOT
-  unset _items
 }
 
 function _domenu 
 {
-  typeset prompt="$1" filter="" nbitems o=n
+  typeset prompt="$1" filter="$2" nbitems o=n
 
-  _nsel=1
   [ "$ZSH_VERSION" ] && o=k
+  _items_split "$filter"
+  filter=""
   [ "$_items" ] || return 1
-  _items_split
   nbitems=${#_aitems[@]}
   [ "$nbitems" = 1 ] && selected="${_aitems[1]}" && return 0
   tput civis
@@ -142,14 +147,10 @@ function _domenu
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;        
       $'\x0d'|''|$'\n') #enter
         tput ed
-        [ "$filter" ] && _nsel=""
-        [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items=$(printf '%s\n' "${_aitems[@]}" |egrep "$filter")
-        [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
+        _items_split "$filter"
         [ ! "$_items" ] && break
-        _items_split
         nbitems=${#_aitems[@]}
         [ $nbitems = 1 ] && selected=${_aitems[1]} && break
-        _nsel=1
         filter=""
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
       *) echo "$k" >/tmp/o;break;
@@ -203,10 +204,9 @@ function selector
     esac
     shift 2
   done
-  [ "$filter" ] && _items=$(printf "%s" "$_items" |egrep "$filter")
   _stty_ori=$(stty -g)
   trap ctrl_c INT
-  _domenu "$prompt" >&2
+  _domenu "$prompt" "$filter" >&2
   trap - INT
   stty $_stty_ori
   unset _items
