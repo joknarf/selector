@@ -78,7 +78,7 @@ function _items_split
     _nsel=""
     [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(printf "%s" "$_items" |egrep -- "$filter")"
   }
-  [ "$_nsel" ] && _items=${_aitems[$_nsel]}
+  [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
   unset _aitems
   while read item;do
@@ -95,10 +95,10 @@ function _domenu
 
   [ "$ZSH_VERSION" ] && o=k
   _items_split "$filter"
-  filter=""
   [ "$_items" ] || return 1
   nbitems=${#_aitems[@]}
   [ "$nbitems" = 1 ] && selected="${_aitems[1]}" && return 0
+  filter=""
   tput civis
   stty -echo
   printf "\e[?7l"
@@ -150,10 +150,10 @@ function _domenu
         _items_split "$filter"
         [ ! "$_items" ] && break
         nbitems=${#_aitems[@]}
-        [ $nbitems = 1 ] && selected=${_aitems[1]} && break
+        [ $nbitems = 1 ] && selected="${_aitems[1]}" && break
         filter=""
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
-      *) echo "$k" >/tmp/o;break;
+      *) break;
     esac
   done
   selected_idx=$_nsel
