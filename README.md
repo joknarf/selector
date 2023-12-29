@@ -17,7 +17,7 @@ args :
 ```
 
 selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)
-When sourced, the selected item is available as `$selected` and index as `$selected_idx`
+When sourced, the selected item is available as `$selected`.
 
 ## demo
 
