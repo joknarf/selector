@@ -192,6 +192,7 @@ function _domenu
         nbitems=${#_aitems[@]}
         [ $nbitems = 1 ] && selected="${_aitems[1]}" && break
         filter=""
+        _items_ori="$_items"
         tput ed
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
       *) break;
