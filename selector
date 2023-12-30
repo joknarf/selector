@@ -238,6 +238,7 @@ function selector
         printf "%s\n" "  -f, --file            file with items"
         printf "%s\n" "  -F, --filter          regexp pattern filter items"
         printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
+        printf "%s\n" "  -a, --autofilter      y or n, filter at keystrokes"
         return 1
         ;;
     esac

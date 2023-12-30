@@ -14,6 +14,7 @@ args :
   -f, --file            file with items
   -F, --filter          regexp pattern filter items
   -P, --powerline       y or n, powerline symbol usage
+  -a, --autofilter      y or n, filter at keystrokes
 ```
 
 selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)
@@ -33,9 +34,15 @@ When sourced, the selected item is available as `$selected`.
 |Left/Home | select first item               | 
 |PgUp/Ctl-F| next page                       |
 |PgDn/Ctl-B| previous page                   |
-|Ctl-X     | Exit                            |
-|Ctl-A     | Use all screen to display menu  |
-|Enter     | select item/exit or apply filter|
+|Ctl-X/Esc | exit                            |
+|Ctl-A     | use all screen to display menu  |
+|Enter     | validate selected item          |
+|Tab       | apply filter/new filter         |
 
 * filter pattern can be applied entering text (ext regexp)
 * selection can be done entering item number
+
+demo usage at:
+* [cdhist](https://github.com/joknarf/cdhist)
+* [redo](https://github.com/joknarf/redo)
+
