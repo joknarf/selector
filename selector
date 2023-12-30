@@ -118,7 +118,8 @@ function _domenu
     case $k in
       $'\x1b')
           filter=""
-          read -rs${o}2 -t1 k
+          read -rs${o}2 -t.001 k
+          [ $? = 1 ] && read -rs${o}2 -t1 k
           case $k in 
             '[A') #up
               _select "$prompt" "_nsel-1" "$nbitems" "$filter";;
@@ -129,19 +130,31 @@ function _domenu
             '[F'|'[C') #end or arrowright
               _select "$prompt" "nbitems" "$nbitems" "$filter";;
             '[6') #pagedn [6~
-              read -rs${o}1 -t1 k
+              read -rs${o}1 -t.001 k
+              [ $? = 1 ] && read -rs${o}1 -t1 k
               _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
             '[5') #pageup [5~
-              read -rs${o}1 -t1 k
+              read -rs${o}1 -t.001 k
+              [ $? = 1 ] && read -rs${o}1 -t1 k
               _select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
             *) break;;
           esac;;
       $'\x7f') #backspace
         filter=${filter%?}
         _menuprompt "$prompt" "$nbitems" "$filter";;
+      $'\xf8') #meta (macos)
+        break;;
       [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
         filter="$filter$k"
         [ "$filter" = ":q" ] && break
+        [ "$_autofilter" = y ] && [[ ! "$filter" =~ ^[0-9]+$ ]] && {
+          tput ed
+          _items_split "$filter"
+          [ ! "$_items" ] && break
+          nbitems=${#_aitems[@]}
+          [ $nbitems = 1 ] && selected="${_aitems[1]}" && break
+          _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
+        }
         _menuprompt "$prompt" "$nbitems" "$filter";;
       $'\x06') # Ctl-F => pgdn
         _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
@@ -172,10 +185,10 @@ function _domenu
 function selector
 {
   typeset prompt filter
-
   prompt="select"
   selected=""
   _maxlines=0
+  _autofilter=y
   _powerline=y
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -197,6 +210,9 @@ function selector
       -F|--filter)
         [ "$2" ] && filter="$2" || return 1
         ;;
+      -a|--autofilter)
+        [ "$2" ] && _autofilter="$2" || return 1
+        ;;
       *)
         printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]\n"
         printf "args :\n"
@@ -217,6 +233,7 @@ function selector
   stty $_stty_ori
   unset _items
   unset _maxlines
+  unset _autofilter
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
