@@ -118,7 +118,7 @@ function _domenu
     case $k in
       $'\x1b')
           filter=""
-          read -rs${o}2 -t.001 k
+          read -rs${o}2 -t.001 k 2>/dev/null
           [ $? = 1 ] && read -rs${o}2 -t1 k
           case $k in 
             '[A') #up
@@ -130,11 +130,11 @@ function _domenu
             '[F'|'[C') #end or arrowright
               _select "$prompt" "nbitems" "$nbitems" "$filter";;
             '[6') #pagedn [6~
-              read -rs${o}1 -t.001 k
+              read -rs${o}1 -t.001 k 2>/dev/null
               [ $? = 1 ] && read -rs${o}1 -t1 k
               _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
             '[5') #pageup [5~
-              read -rs${o}1 -t.001 k
+              read -rs${o}1 -t.001 k 2>/dev/null
               [ $? = 1 ] && read -rs${o}1 -t1 k
               _select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
             *) break;;
