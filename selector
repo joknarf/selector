@@ -97,6 +97,8 @@ function _domenu
 {
   typeset prompt="$1" filter="$2" nbitems o=n
 
+  printf "\r"
+  tput el
   [ "$ZSH_VERSION" ] && o=k
   _items_split "$filter"
   [ "$_items" ] || return 1
