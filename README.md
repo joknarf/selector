@@ -39,7 +39,7 @@ When sourced, the selected item is available as `$selected`.
 |Enter     | validate selected item          |
 |Tab       | apply filter/new filter         |
 
-* filter pattern can be applied entering text (ext regexp)
+* filter pattern can be applied entering text (grep regexp)
 * selection can be done entering item number
 
 demo usage at:
