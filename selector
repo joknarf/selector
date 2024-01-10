@@ -108,7 +108,7 @@ function _domenu
   filter=""
   tput civis
   stty -echo
-  printf "\e[?7l"
+  printf "\e[?7l" # nowrap
   : ${LINES:=$(tput lines)}
   [ "$_maxlines" -gt 2 ] || unset _maxlines
   _showmenu "$prompt" "$_nsel" "$nbitems" ""
@@ -195,6 +195,7 @@ function _domenu
   unset _nsel
   unset _aitems
   unset _items_ori
+  printf "\e[?7h" #wrap
   tput ed
   tput cnorm
 }
