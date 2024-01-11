@@ -76,7 +76,7 @@ function _items_split
 
   [ "$filter" ] && {
     _nsel=""
-    [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(printf "%s" "$_items" |grep -- "$filter"|uniq)"
+    [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(printf "%s" "$_items" |grep -- "$filter" 2>/dev/null|uniq)"
   }
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
@@ -247,7 +247,7 @@ function selector
   done
   _stty_ori=$(stty -g)
   trap _ctrl_c INT
-  _domenu "$prompt" "$filter" >&2
+  LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
   trap - INT
   stty $_stty_ori
   unset _items
@@ -256,5 +256,7 @@ function selector
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
+
+locale -a |grep -q "en_US.UTF-8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
 
 [ "$1" ] && selector "$@"
