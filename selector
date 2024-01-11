@@ -14,6 +14,7 @@ function _menuprompt
 {
   typeset form filter=${3:-${_aitems[$_nsel]}} nb="$_nsel/$2 " pl=""
   printf "\r"
+  #form="$1: %s%s"
   [ "$_powerline" = "y" ] && pl=""
   form="\e[30m\e[44m\e[97m $1 \e[0m\e[34m\e[44m\e[100m$pl\e[97m %s\e[0m\e[90m\e[100m\e[49m$pl\e[0m %s"
   printf "$form" "$nb" "$filter"
@@ -81,12 +82,30 @@ function _items_split
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
   unset _aitems
-  while read -r item;do
+  while IFS= read -r item;do
     _aitems[$i]="$item"
     i=$((i+1))
   done <<EOT
 $_items
 EOT
+}
+
+function _readkey
+{
+    typeset o=${1:-n} k
+    IFS= read -rs${o}1 key
+    [ "$key" = $'\x1b' ] && key="" && while true
+    do
+      k=""
+      read -rs${o}1 -t.001 k 2>/dev/null
+      [ $? = 1 ] && read -rs${o}1 -t1 k # old bash
+      [ ! "$k" ] && key=${key:-$'\x1b'} && break
+      key+="$k"
+      case "$key" in
+      '['[A-H]|'['*'~'|O[P-S]|'[1;2'[P-S]) break;;  
+      esac
+    done
+    printf "%s" "$key"
 }
 
 function _domenu 
@@ -114,31 +133,28 @@ function _domenu
   _showmenu "$prompt" "$_nsel" "$nbitems" ""
   while true
   do
-    IFS= read -rs${o}1 k
+    k=$(_readkey $o)
     case $k in
-      $'\x1b')
-          filter=""
-          read -rs${o}2 -t.001 k 2>/dev/null
-          [ $? = 1 ] && read -rs${o}2 -t1 k
-          case $k in 
-            '[A') #up
-              _select "$prompt" "_nsel-1" "$nbitems" "$filter";;
-            '[B') #down
-              _select "$prompt" "_nsel+1" "$nbitems" "$filter";;
-            '[H'|'[D') #home or arrowleft
-              _select "$prompt" "1" "$nbitems" "$filter";;
-            '[F'|'[C') #end or arrowright
-              _select "$prompt" "nbitems" "$nbitems" "$filter";;
-            '[6') #pagedn [6~
-              read -rs${o}1 -t.001 k 2>/dev/null
-              [ $? = 1 ] && read -rs${o}1 -t1 k
-              _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
-            '[5') #pageup [5~
-              read -rs${o}1 -t.001 k 2>/dev/null
-              [ $? = 1 ] && read -rs${o}1 -t1 k
-              _select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
-            *) break;;
-          esac;;
+      '[A') #up
+        filter="";_select "$prompt" "_nsel-1" "$nbitems" "$filter";;
+      '[B') #down
+        filter="";_select "$prompt" "_nsel+1" "$nbitems" "$filter";;
+      '[H'|'[D') #home or arrowleft
+        filter="";_select "$prompt" "1" "$nbitems" "$filter";;
+      '[F'|'[C') #end or arrowright
+        filter="";_select "$prompt" "nbitems" "$nbitems" "$filter";;
+      '[6~'|$'\x06') #pagedn Ctl-F
+        filter="";_select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
+      '[5~'|$'\x02') #pageup Ctl-B
+        filter="";_select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
+      '[19~'|$'\x04') # F8 Ctl-D delete
+        [ "$_delfunc" ] && $_delfunc "${_aitems[$_nsel]}"
+        unset "_aitems[$_nsel]"
+        _aitems=(_ "${_aitems[@]}")
+        unset '_aitems[0]'
+        nbitems=${#_aitems[@]}
+        tput ed
+        filter="";_select "$prompt" "$_nsel" "$nbitems" "$filter";;
       $'\x7f') #backspace
         filter=${filter%?}
         _items="$_items_ori"
@@ -168,10 +184,6 @@ function _domenu
           _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
         }
         _menuprompt "$prompt" "$nbitems" "$filter";;
-      $'\x06') # Ctl-F => pgdn
-        _select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
-      $'\x02') # Ctl-B => pgup
-        _select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
       $'\x0c') # Ctl-L => refresh
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
       $'\x01') # Ctl-A => all
@@ -180,16 +192,16 @@ function _domenu
       $'\x0d'|''|$'\n') # enter
         [[ "$filter" =~ ^[0-9]+$ ]] && selected="${_aitems[$filter]}" || selected="${_aitems[$_nsel]}"
         break;;     
-      $'\t') #tab
+      $'\t') # tab
         _items_split "$filter"
         [ ! "$_items" ] && break
         nbitems=${#_aitems[@]}
         [ $nbitems = 1 ] && selected="${_aitems[1]}" && break
-        filter=""
         _items_ori="$_items"
+        filter=""
         tput ed
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
-      *) break;
+      *) printf "%s" "$k" >/tmp/o;break;
     esac
   done
   unset _nsel
@@ -208,6 +220,7 @@ function selector
   _maxlines=0
   _autofilter=y
   _powerline=y
+  _delfunc=""
   while [ $# -gt 0 ]; do
     case "$1" in
       -p|--prompt)
@@ -231,6 +244,9 @@ function selector
       -a|--autofilter)
         [ "$2" ] && _autofilter="$2" || return 1
         ;;
+      -d|--deletefunc)
+        [ "$2" ] && _delfunc="$2" || return 1
+        ;;
       *)
         printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]\n"
         printf "args :\n"
@@ -239,7 +255,6 @@ function selector
         printf "%s\n" "  -f, --file            file with items"
         printf "%s\n" "  -F, --filter          regexp pattern filter items"
         printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
-        printf "%s\n" "  -a, --autofilter      y or n, filter at keystrokes"
         return 1
         ;;
     esac
@@ -258,7 +273,7 @@ function selector
 }
 
 [[ "$LANG" = *UTF-8 ]] && __selector_lc="$LANG" || {
-    type locale 2>/dev/null && locale -a |grep -q "en_US.UTF-8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
+    type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
 }
 
 [ "$1" ] && selector "$@"
