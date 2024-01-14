@@ -125,7 +125,7 @@ function _domenu
   _items_ori="$_items"
   filter=""
   tput civis
-  stty -echo
+  stty -echo 2>/dev/null
   printf "\e[?7l" # nowrap
   : ${LINES:=$(tput lines)}
   [ "$_maxlines" -gt 2 ] || unset _maxlines
@@ -149,8 +149,8 @@ function _domenu
       '[19~'|$'\x04') # F8 Ctl-D delete
         [ "$_delfunc" ] && $_delfunc "${_aitems[$_nsel]}"
         unset "_aitems[$_nsel]"
-        _aitems=(_ "${_aitems[@]}")
-        unset '_aitems[0]'
+        [ "$BASH" ] && _aitems=(_ "${_aitems[@]}") && unset '_aitems[0]' ||\
+          _aitems=("${(@)_aitems[1,$_nsel-1]}" "${(@)_aitems[$_nsel+1,$nbitems]}")
         nbitems=${#_aitems[@]}
         tput ed
         filter="";_select "$prompt" "$_nsel" "$nbitems" "$filter";;
@@ -261,11 +261,11 @@ function selector
     esac
     shift 2
   done
-  _stty_ori=$(stty -g)
+  _stty_ori=$(stty -g 2>/dev/null)
   trap _ctrl_c INT
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
   trap - INT
-  stty $_stty_ori
+  stty $_stty_ori 2>/dev/null
   unset _items
   unset _maxlines
   unset _autofilter
