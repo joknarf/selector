@@ -15,6 +15,7 @@ args :
   -F, --filter          regexp pattern filter items
   -P, --powerline       y or n, powerline symbol usage
   -a, --autofilter      y or n, filter at keystrokes
+  -d, --delfunc         shell function to call when F8/Del
 ```
 
 selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)
@@ -38,6 +39,7 @@ When sourced, the selected item is available as `$selected`.
 |Ctl-A     | use all screen to display menu  |
 |Enter     | validate selected item          |
 |Tab       | apply filter/new filter         |
+|F8/Del    | delete item (and call delfunc)  |
 
 * filter pattern can be applied entering text (grep regexp)
 * selection can be done entering item number
