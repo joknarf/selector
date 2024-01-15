@@ -91,21 +91,21 @@ EOT
 
 function _readkey
 {
-    typeset o=${1:-n} k tmout=0.001
-    [ "$KSH_VERSION" ] && tmout=0.01
-    IFS= read -rs${o}1 key
-    [ "$key" = $'\x1b' ] && key="" && while true
-    do
-      k=""
-      read -rs${o}1 -t $tmout k 2>/dev/null
-      [ $? = 1 ] && [ "$BASH" ] && read -rs${o}1 -t 1 k # old bash
-      [ ! "$k" ] && key=${key:-$'\x1b'} && break
-      key+="$k"
-      case "$key" in
-      '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
-      esac
-    done
-    printf "%s" "$key"
+  typeset o=${1:-n} k tmout=0.001
+  [ "$KSH_VERSION" ] && tmout=0.01
+  IFS= read -rs${o}1 key
+  [ "$key" = $'\x1b' ] && key="" && while true
+  do
+    k=""
+    read -rs${o}1 -t $tmout k 2>/dev/null
+    [ $? = 1 ] && [ "$BASH" ] && read -rs${o}1 -t 1 k # old bash
+    [ ! "$k" ] && key=${key:-$'\x1b'} && break
+    key+="$k"
+    case "$key" in
+    '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
+    esac
+  done
+  printf "%s" "$key"
 }
 
 function _domenu 
@@ -276,7 +276,7 @@ function selector
 }
 
 [[ "$LANG" = *UTF-8 ]] && __selector_lc="$LANG" || {
-    type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
+  type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
 }
 
 [ "$1" ] && selector "$@"
