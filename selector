@@ -51,6 +51,7 @@ function _showmenu
   size=$((nbitems+1))
   [ "$size" -gt $lines ] && size=$lines
   # back to top of menu
+  tput ed
   i=1;while [ $i -lt $size ];do
     echo cuu1
     i=$((i + 1))
@@ -133,8 +134,20 @@ function _domenu
   _showmenu "$prompt" "$_nsel" "$nbitems" ""
   while true
   do
-    k=$(_readkey $o)
-    case $k in
+    k="$(_readkey $o)"
+    [ "$_keyfunc" ] && { # custom key control
+      $_keyfunc "$k" # 0: already managed / 1: managed exit / 2: default 
+      case "$?" in
+        0) 
+          _items_split "."
+          nbitems=${#_aitems[@]}
+          filter=""
+          _showmenu "$prompt" "$_nsel" "$nbitems" ""
+          continue;;
+        1) break;;
+      esac
+    }
+    case "$k" in
       '[A'|OA) #up
         filter="";_select "$prompt" "_nsel-1" "$nbitems" "$filter";;
       '[B'|OB) #down
@@ -181,7 +194,6 @@ function _domenu
             _items_split "$filter"
           }
           nbitems=${#_aitems[@]}
-          tput ed
           _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
         }
         _menuprompt "$prompt" "$nbitems" "$filter";;
@@ -245,8 +257,8 @@ function selector
       -a|--autofilter)
         [ "$2" ] && _autofilter="$2" || return 1
         ;;
-      -d|--deletefunc)
-        [ "$2" ] && _delfunc="$2" || return 1
+      -k|--keyfunc)
+        [ "$2" ] && _keyfunc="$2" || return 1
         ;;
       *)
         printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>] [-d <cmd>]\n"
@@ -257,7 +269,7 @@ function selector
         printf "%s\n" "  -F, --filter          regexp pattern filter items"
         printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
         printf "%s\n" "  -a, --autofilter      y or n, filter at keystrokes (default y)"
-        printf "%s\n" "  -d, --deletefunc      delete command to call on (F8/Ctl-D)"
+        printf "%s\n" "  -k, --keyfunc         Custom additional key function"
         return 1
         ;;
     esac

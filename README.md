@@ -15,7 +15,7 @@ args :
   -F, --filter          regexp pattern filter items
   -P, --powerline       y or n, powerline symbol usage
   -a, --autofilter      y or n, filter at keystrokes
-  -d, --delfunc         shell function to call when F8/Del
+  -k, --keyfunc         Custom additional key function
 ```
 
 selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)
