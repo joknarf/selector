@@ -161,7 +161,6 @@ function _domenu
       '[5~'|$'\x02') #pageup Ctl-B
         filter="";_select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
       '[19~'|$'\x04'|'[3~') # F8 Ctl-D delete
-        [ "$_delfunc" ] && $_delfunc "${_aitems[$_nsel]}"
         unset "_aitems[$_nsel]"
         [ "$ZSH_VERSION" ] && _aitems=("${(@)_aitems[1,$_nsel-1]}" "${(@)_aitems[$_nsel+1,$nbitems]}") ||\
           { _aitems=(_ "${_aitems[@]}") && unset '_aitems[0]'; }
@@ -233,7 +232,7 @@ function selector
   _maxlines=0
   _autofilter=y
   _powerline=y
-  _delfunc=""
+  _keyfunc=""
   while [ $# -gt 0 ]; do
     case "$1" in
       -p|--prompt)
