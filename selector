@@ -141,8 +141,7 @@ function _domenu
           _items_split "."
           filter=""
           nbitems=${#_aitems[@]}
-          [ "$_force_nsel" ] && _nsel=$_force_nsel && unset _force_nsel
-          _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
+          _select "$prompt" "${_force_nsel:-1}" "$nbitems" "$filter"
           continue;;
         1) break;;
       esac
