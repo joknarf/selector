@@ -1,0 +1,23 @@
+. ./selector
+
+_completude() {
+  local compfunc
+  compfunc="${_compfunc["${COMP_WORDS[O]##/}"]}"
+  [ "$compfunc" ] || return 
+  $compfunc
+  [ ${#COMPREPLY[@]} -le 1 ] && return
+  IFS='[;' read -rsd R -p $'\e[6n' _ row col
+  printf "\n" >&2
+  COMPREPLY=( "$(selector -m 10 -i "$(printf "%s\n" "${COMPREPLY[@]}"|sort )" -F "${COMP_WORDS[$COMP_CWORD]}")" )
+  #kill -WINCH $$ # force redraw prompt
+  tput cuu1
+  tput cuf $((col-1)) >&2
+  [ ! "${COMPREPLY[0]}" ] && COMPREPLY=() && return
+}
+
+completude() {
+  compfunc="$(complete |awk '$NF==cmd {print $(NF-1)}' cmd="$1")"
+  [ "$compfunc" = _completude ] && return 0
+  _compfunc["$1"]="$compfunc"
+  complete -F _completude "$1"
+}
