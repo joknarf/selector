@@ -31,7 +31,18 @@ _complete-ng_key() {
       _complete-ng_navigate "$dir/.." || return 3
       return 0
     ;;
-
+    'OR') # F3
+      [ -r "$dir" ] && [ -f "$dir" ] || return 0
+      tput ed >&2
+      less "$dir"
+      return 0
+    ;;
+    'OS') # F4
+      [ -r "$dir" ] && [ -f "$dir" ] || return 0
+      tput ed >&2
+      vi "$dir"
+      return 0
+    ;;
 
   esac
   return 2
