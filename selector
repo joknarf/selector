@@ -135,7 +135,7 @@ function _domenu
   do
     k="$(_readkey $o)"
     [ "$_keyfunc" ] && { # custom key control
-      $_keyfunc "$k" # 0: already managed / 1: managed exit / 2: default 
+      $_keyfunc "$k" # 0: already managed / 1: managed exit / 2: default / 3: skip default
       case "$?" in
         0) 
           _items_split "."
@@ -144,6 +144,7 @@ function _domenu
           _select "$prompt" "${_force_nsel:-1}" "$nbitems" "$filter"
           continue;;
         1) break;;
+        3) continue;;
       esac
     }
     case "$k" in
@@ -290,3 +291,4 @@ function selector
 }
 
 [ "$1" ] && selector "$@"
+:
