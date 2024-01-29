@@ -41,8 +41,8 @@ completude() {
     eval "_compfunc_${c//[.-]/_}=$fn"
     $comp -F _completude "$cmd"
   done
-  complete -F _completude -D
-  complete -F _completude -I
+  complete -F _completude -D 2>/dev/null
+  complete -F _completude -I 2>/dev/null
 }
 
 completude -D
