@@ -29,15 +29,17 @@ _completude() {
 }
 
 completude() {
-  local cmd fn c
+  local cmd fn c comp
   for cmd in "$@";do
     fn="$(complete -p "$cmd" 2>/dev/null)"
     fn="${fn% *}"
+    comp=${fn%-F*}
     fn="${fn#*-F }"
     [ "$fn" = _completude ] && continue
+    [ "$fn" ] || continue
     c="${cmd##*/}"
     eval "_compfunc_${c//[.-]/_}=$fn"
-    complete -F _completude "$cmd"
+    $comp -F _completude "$cmd"
   done
   complete -F _completude -D
   complete -F _completude -I
