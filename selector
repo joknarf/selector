@@ -103,7 +103,7 @@ function _readkey
     [ ! "$k" ] && key=${key:-$'\x1b'} && break
     key+="$k"
     case "$key" in
-    '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
+      '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
     esac
   done
   printf "%s" "$key"
