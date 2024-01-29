@@ -1,23 +1,47 @@
 . ./selector
 
 _completude() {
-  local compfunc
-  compfunc="${_compfunc["${COMP_WORDS[O]##/}"]}"
-  [ "$compfunc" ] || return 
-  $compfunc
+  local cmd="${COMP_WORDS[O]##*/}" fn IFS opt="-f" word=""
+  fn=$(eval printf %s '$'_compfunc_"${cmd//[.-]/_}")
+  [ "$fn" ] || {
+    [ "$_compfunc__D" ] && {
+        $_compfunc__D "$@"
+        completude $cmd
+        fn=$(eval printf %s '$'_compfunc_"${cmd//[.-]/_}")
+    }
+  }
+  [ "$fn" ] && { $fn "$@"; } || {
+    type compopt >/dev/null 2>&1 && compopt -o filenames 2>/dev/null || \
+        compgen -f /non-existing-dir/ >/dev/null
+    [ "$COMP_CWORD" -le 0 ] && opt="-c"
+    [ "$COMP_CWORD" -ge 0 ] && word="${COMP_WORDS[$COMP_CWORD]}" || word="./"
+    IFS=$'\n' COMPREPLY=( $(compgen $opt "$word") ) IFS=$' \t\n'; 
+  }
   [ ${#COMPREPLY[@]} -le 1 ] && return
   IFS='[;' read -rsd R -p $'\e[6n' _ row col
   printf "\n" >&2
-  COMPREPLY=( "$(selector -m 10 -i "$(printf "%s\n" "${COMPREPLY[@]}"|sort )" -F "${COMP_WORDS[$COMP_CWORD]}")" )
+  COMPREPLY=( "$(selector -m 10 -i "$(printf "%s\n" "${COMPREPLY[@]}"|sort -u)" -F "$word")" )
   #kill -WINCH $$ # force redraw prompt
   tput cuu1
   tput cuf $((col-1)) >&2
   [ ! "${COMPREPLY[0]}" ] && COMPREPLY=() && return
+  #[ -d "${COMPREPLY[0]}" ] && COMPREPLY[0]="${COMPREPLY[0]/\//}/"
 }
 
 completude() {
-  compfunc="$(complete |awk '$NF==cmd {print $(NF-1)}' cmd="$1")"
-  [ "$compfunc" = _completude ] && return 0
-  _compfunc["$1"]="$compfunc"
-  complete -F _completude "$1"
+  local cmd fn c
+  for cmd in "$@";do
+    fn="$(complete -p "$cmd" 2>/dev/null)"
+    fn="${fn% *}"
+    fn="${fn#*-F }"
+    [ "$fn" = _completude ] && continue
+    c="${cmd##*/}"
+    eval "_compfunc_${c//[.-]/_}=$fn"
+    complete -F _completude "$cmd"
+  done
+  complete -F _completude -D
+  complete -F _completude -I
 }
+
+completude -D
+completude $(complete |awk '/-F (_longopt|_filedir_xspec|_systemctl|_service|_command|_sudo)/{print $NF}')
