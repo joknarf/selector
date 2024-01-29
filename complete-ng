@@ -1,0 +1,89 @@
+. ./selector
+
+_complete-ng_navigate() {
+  local dir=$1 IFS
+  [[ "$dir" = \~/* ]] && dir="$HOME/"${dir#\~/}
+  [ -d "$dir" ] || return 1
+  dir=$(\cd "$dir" >/dev/null 2>&1 && pwd) || return 1
+  [[ $dir = $PWD* ]] && dir="${dir#$PWD}" && dir="${dir#/}"
+  [ "$dir" ] && dir="${dir%/}/"
+  [[ "$dir" = $HOME/* ]] && dir="~/${dir#$HOME/}"
+  IFS='\n' _items=( "$(compgen -f "$dir"|sort -u)" ) IFS=' \t\n'
+  [ "$_items" ] || _items="${dir%/}/"
+  _items_ori="$_items"
+  return 0
+}
+
+_complete-ng_key() {
+  local k="$1" dir="${_aitems[$_nsel]}"
+  case "$k" in
+    $'\t') # tab
+      selected="$dir"
+      return 1
+    ;;
+    '[C'|OC) # right
+      _complete-ng_navigate "$dir" || return 3
+      return 0
+    ;;
+    '[D'|OD) # left
+      #[[ -e $dir ]] || return 3
+      [[ "$dir" = */* ]] && dir="${dir%/*}" || dir=.
+      _complete-ng_navigate "$dir/.." || return 3
+      return 0
+    ;;
+
+
+  esac
+  return 2
+}
+
+_complete-ng() {
+  local cmd="${COMP_WORDS[O]##*/}" fn IFS opt="-f" word=""
+
+  [ "$COMP_CWORD" -ge 0 ] && word="${COMP_WORDS[$COMP_CWORD]}" || word="./"
+  fn=$(eval printf %s '$'_compfunc_"${cmd//[^a-zA-Z0-9_]/_}")
+  [ "$fn" ] || {
+    [ "$_compfunc__D" ] && {
+        $_compfunc__D "$@"
+        complete-ng $cmd
+        fn=$(eval printf %s '$'_compfunc_"${cmd//[^a-zA-Z0-9_]/_}")
+    }
+  }
+  [ "$fn" ] && { $fn "$@"; } || {
+    type compopt >/dev/null 2>&1 && compopt -o filenames 2>/dev/null || \
+        compgen -f /non-existing-dir/ >/dev/null
+    [ "$COMP_CWORD" -le 0 ] && opt="-c"
+    IFS=$'\n' COMPREPLY=( $(compgen $opt "$word") ) IFS=$' \t\n'; 
+  }
+  [ ${#COMPREPLY[@]} -le 1 ] && return
+  IFS='[;' read -rsd R -p $'\e[6n' _ row col
+  printf "\n" >&2
+  COMPREPLY=( "$(selector -m 10 -k _complete-ng_key -i "$(printf "%s\n" "${COMPREPLY[@]}"|sort -u)" -F "$word")" )
+  #kill -WINCH $$ # force redraw prompt
+  tput cuu1
+  tput cuf $((col-1)) >&2
+  [ ! "${COMPREPLY[0]}" ] && COMPREPLY=() && return
+  #[ -d "${COMPREPLY[0]}" ] && COMPREPLY[0]="${COMPREPLY[0]/\//}/"
+}
+
+complete-ng() {
+  local cmd fn c comp
+  for cmd in "$@";do
+    fn="$(complete -p "$cmd" 2>/dev/null)"
+    fn="${fn% *}"
+    comp=${fn%-F*}
+    fn="${fn#*-F }"
+    [ "$fn" = _complete-ng ] && continue
+    [ "$fn" = _cdhist_cd ] && continue
+    [ "$fn" ] || continue
+    c="${cmd##*/}"
+    eval "_compfunc_${c//[^a-zA-Z0-9_]/_}=$fn"
+    $comp -F _complete-ng "$cmd"
+  done
+  complete -F _complete-ng -D 2>/dev/null
+  complete -F _complete-ng -I 2>/dev/null
+}
+
+#complete-ng $(complete |awk '/-F (_longopt|_filedir_xspec|_systemctl|_service|_command|_sudo|_root_command)/{print $NF}')
+type cdcomplete >/dev/null 2>&1 && cdcomplete
+complete-ng $(complete |grep -- '-F ')
