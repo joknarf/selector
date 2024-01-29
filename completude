@@ -47,4 +47,4 @@ completude() {
 }
 
 completude -D
-completude $(complete |awk '/-F (_longopt|_filedir_xspec|_systemctl|_service|_command|_sudo)/{print $NF}')
+completude $(complete |awk '/-F (_longopt|_filedir_xspec|_systemctl|_service|_command|_sudo|_root_command)/{print $NF}')
