@@ -15,35 +15,35 @@ _complete-ng_navigate() {
 }
 
 _complete-ng_key() {
-  local k="$1" dir="${_aitems[$_nsel]}"
+  local k="$1" item="${_aitems[$_nsel]}"
+  [[ "$item" = \~* ]] && item="$(IFS=;eval IFS= printf %s ~$(IFS= printf %q ${item#\~}))"
   case "$k" in
     $'\t') # tab
-      selected="$dir"
+      selected="$item"
       return 1
     ;;
     '[C'|OC) # right
-      _complete-ng_navigate "$dir" || return 3
+      _complete-ng_navigate "$item" || return 3
       return 0
     ;;
     '[D'|OD) # left
-      #[[ -e $dir ]] || return 3
-      [[ "$dir" = */* ]] && dir="${dir%/*}" || dir=.
-      _complete-ng_navigate "$dir/.." || return 3
+      [ -e "$item" ] || return 3
+      [[ "$item" = */* ]] && item="${item%/*}" || item=.
+      _complete-ng_navigate "$item/.." || return 3
       return 0
     ;;
-    'OR') # F3
-      [ -r "$dir" ] && [ -f "$dir" ] || return 0
+    'OR'|l) # F3
+      [ -r "$item" ] && [ -f "$item" ] || return 0
       tput ed >&2
-      less "$dir"
+      less "$item"
       return 0
     ;;
     'OS') # F4
-      [ -r "$dir" ] && [ -f "$dir" ] || return 0
+      [ -r "$item" ] && [ -f "$item" ] || return 0
       tput ed >&2
-      vi "$dir"
+      vi "$item"
       return 0
     ;;
-
   esac
   return 2
 }
