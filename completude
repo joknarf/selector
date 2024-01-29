@@ -4,12 +4,12 @@ _completude() {
   local cmd="${COMP_WORDS[O]##*/}" fn IFS opt="-f" word=""
 
   [ "$COMP_CWORD" -ge 0 ] && word="${COMP_WORDS[$COMP_CWORD]}" || word="./"
-  fn=$(eval printf %s '$'_compfunc_"${cmd//[.-]/_}")
+  fn=$(eval printf %s '$'_compfunc_"${cmd//[^a-zA-Z0-9_]/_}")
   [ "$fn" ] || {
     [ "$_compfunc__D" ] && {
         $_compfunc__D "$@"
         completude $cmd
-        fn=$(eval printf %s '$'_compfunc_"${cmd//[.-]/_}")
+        fn=$(eval printf %s '$'_compfunc_"${cmd//[^a-zA-Z0-9_]/_}")
     }
   }
   [ "$fn" ] && { $fn "$@"; } || {
@@ -39,7 +39,7 @@ completude() {
     [ "$fn" = _completude ] && continue
     [ "$fn" ] || continue
     c="${cmd##*/}"
-    eval "_compfunc_${c//[.-]/_}=$fn"
+    eval "_compfunc_${c//[^a-zA-Z0-9_]/_}=$fn"
     $comp -F _completude "$cmd"
   done
   complete -F _completude -D 2>/dev/null
