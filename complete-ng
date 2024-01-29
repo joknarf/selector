@@ -8,7 +8,7 @@ _complete-ng_navigate() {
   [[ $dir = $PWD* ]] && dir="${dir#$PWD}" && dir="${dir#/}"
   [ "$dir" ] && dir="${dir%/}/"
   [[ "$dir" = $HOME/* ]] && dir="~/${dir#$HOME/}"
-  IFS='\n' _items=( "$(compgen -f "$dir"|sort -u)" ) IFS=' \t\n'
+  IFS='\n' _items=( "$(compgen -f -- "$dir"|sort -u)" ) IFS=' \t\n'
   [ "$_items" ] || _items="${dir%/}/"
   _items_ori="$_items"
   return 0
@@ -64,7 +64,7 @@ _complete-ng() {
     type compopt >/dev/null 2>&1 && compopt -o filenames 2>/dev/null || \
         compgen -f /non-existing-dir/ >/dev/null
     [ "$COMP_CWORD" -le 0 ] && opt="-c"
-    IFS=$'\n' COMPREPLY=( $(compgen $opt "$word") ) IFS=$' \t\n'; 
+    IFS=$'\n' COMPREPLY=( $(compgen $opt -- "$word") ) IFS=$' \t\n'; 
   }
   [ ${#COMPREPLY[@]} -le 1 ] && return
   IFS='[;' read -rsd R -p $'\e[6n' _ row col
