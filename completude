@@ -2,6 +2,8 @@
 
 _completude() {
   local cmd="${COMP_WORDS[O]##*/}" fn IFS opt="-f" word=""
+
+  [ "$COMP_CWORD" -ge 0 ] && word="${COMP_WORDS[$COMP_CWORD]}" || word="./"
   fn=$(eval printf %s '$'_compfunc_"${cmd//[.-]/_}")
   [ "$fn" ] || {
     [ "$_compfunc__D" ] && {
@@ -14,7 +16,6 @@ _completude() {
     type compopt >/dev/null 2>&1 && compopt -o filenames 2>/dev/null || \
         compgen -f /non-existing-dir/ >/dev/null
     [ "$COMP_CWORD" -le 0 ] && opt="-c"
-    [ "$COMP_CWORD" -ge 0 ] && word="${COMP_WORDS[$COMP_CWORD]}" || word="./"
     IFS=$'\n' COMPREPLY=( $(compgen $opt "$word") ) IFS=$' \t\n'; 
   }
   [ ${#COMPREPLY[@]} -le 1 ] && return
