@@ -16,7 +16,7 @@ _complete-ng_navigate() {
 _complete-ng_key() {
   local k="$1" item="${_aitems[$_nsel]}"
   [[ "$item" = \~* ]] && item="$(IFS=;eval printf %s '~'$(printf %q ${item#\~}))"
-  [[ "$item" = \$* ]] && item="$(IFS=;eval printf %s '$'$(printf %q ${item#\$}))"
+  [[ "$item" = \$[A-Za-z0-9_]* ]] && item="$(IFS=;eval printf %s '$'$(printf %q ${item#\$}))"
   case "$k" in
     $'\t') # tab
       selected="$item"
