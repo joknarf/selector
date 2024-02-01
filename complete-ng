@@ -15,7 +15,8 @@ _complete-ng_navigate() {
 
 _complete-ng_key() {
   local k="$1" item="${_aitems[$_nsel]}"
-  [[ "$item" = \~* ]] && item="$(IFS=;eval IFS= printf %s ~$(IFS= printf %q ${item#\~}))"
+  [[ "$item" = \~* ]] && item="$(IFS=;eval printf %s '~'$(printf %q ${item#\~}))"
+  [[ "$item" = \$* ]] && item="$(IFS=;eval printf %s '$'$(printf %q ${item#\$}))"
   case "$k" in
     $'\t') # tab
       selected="$item"
@@ -96,4 +97,4 @@ complete-ng() {
 
 #complete-ng $(complete |awk '/-F (_longopt|_filedir_xspec|_systemctl|_service|_command|_sudo|_root_command)/{print $NF}')
 type cdcomplete >/dev/null 2>&1 && cdcomplete
-complete-ng $(complete |grep -- '-F ')
+complete-ng $(complete |awk '/-F /{print $NF}')
