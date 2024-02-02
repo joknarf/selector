@@ -103,7 +103,7 @@ function _readkey
     [ ! "$k" ] && key=${key:-$'\x1b'} && break
     key+="$k"
     case "$key" in
-    '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
+      '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
     esac
   done
   printf "%s" "$key"
@@ -135,15 +135,17 @@ function _domenu
   do
     k="$(_readkey $o)"
     [ "$_keyfunc" ] && { # custom key control
-      $_keyfunc "$k" # 0: already managed / 1: managed exit / 2: default 
+      $_keyfunc "$k" # 0: already managed / 1: managed exit / 2: default / 3: skip default
       case "$?" in
         0) 
           _items_split "."
           filter=""
           nbitems=${#_aitems[@]}
           _select "$prompt" "${_force_nsel:-1}" "$nbitems" "$filter"
+          unset _force_nsel
           continue;;
         1) break;;
+        3) continue;;
       esac
     }
     case "$k" in
@@ -155,9 +157,9 @@ function _domenu
         filter="";_select "$prompt" "1" "$nbitems" "$filter";;
       '[F'|'[C'|OC) #end or arrowright
         filter="";_select "$prompt" "nbitems" "$nbitems" "$filter";;
-      '[6~'|$'\x06') #pagedn Ctl-F
+      '[6~'|$'\x06'|'[1;2B') #pagedn Ctl-F shift-down
         filter="";_select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
-      '[5~'|$'\x02') #pageup Ctl-B
+      '[5~'|$'\x02'|'[1;2A') #pageup Ctl-B shift-up
         filter="";_select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
       '[19~'|$'\x04'|'[3~') # F8 Ctl-D delete
         unset "_aitems[$_nsel]"
@@ -289,4 +291,6 @@ function selector
   type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
 }
 
-[ "$1" ] && selector "$@"
+[ "$1" ] && { selector "$@"; exit $?; }
+:
+
