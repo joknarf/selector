@@ -34,14 +34,14 @@ _complete-ng_key() {
     ;;
     'OR') # F3
       [ -r "$item" ] && [ -f "$item" ] || return 0
-      tput ed >&2
-      less "$item"
+      less -+X "$item"
+      tput civis
       return 0
     ;;
     'OS') # F4
       [ -r "$item" ] && [ -f "$item" ] || return 0
-      tput ed >&2
-      vi "$item"
+      ${EDITOR:-vi} "$item"
+      tput civis
       return 0
     ;;
   esac
