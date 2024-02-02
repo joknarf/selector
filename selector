@@ -34,7 +34,7 @@ function _showmenu
   _menuprompt "$prompt" "$nbitems" "$filter"
   w=$nbitems;w=${#w}
   lines=${_maxlines:-$LINES}
-  [ $lines -gt $LINES ] && lines=$LINES
+  [ $lines -ge $LINES ] && lines=$(($LINES-1))
   min=$(($nsel-$lines+2))
   [ "$min" -le 0 ] && min=1
   max=$(($min+$lines-2))
@@ -76,7 +76,7 @@ function _select
   typeset prompt="$1" newsel="$2" nbitems="$3" filter="$4" lines
 
   lines=${_maxlines:-$LINES}
-  [ $lines -gt $LINES ] && lines=$LINES
+  [ $lines -ge $LINES ] && lines=$(($LINES-1))
   _nsel=$(($newsel))
   [ $_nsel -lt 1 ] && _nsel=1
   [ $_nsel -ge $nbitems ] && _nsel=$nbitems
