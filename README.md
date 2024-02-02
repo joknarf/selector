@@ -27,24 +27,24 @@ When sourced, the selected item is available as `$selected`.
 
 ## keys
 
-|key       | action                          |
-|----------|---------------------------------|
-|Down      | select nex item                 | 
-|Up        | select prev item                |
-|Right/End | select last item                |
-|Left/Home | select first item               | 
-|PgUp/Ctl-F| next page                       |
-|PgDn/Ctl-B| previous page                   |
-|Ctl-X/Esc | exit                            |
-|Ctl-A     | use all screen to display menu  |
-|Enter     | validate selected item          |
-|Tab       | apply filter/new filter         |
-|F8/Del    | delete item (and call delfunc)  |
+|key                             | action                                                |
+|--------------------------------|-------------------------------------------------------|
+|<kbd>⇩</kbd>                    | select next item                                      | 
+|<kbd>⇧</kbd>                    | select prev item                                      |
+|<kbd>End</kbd>/<kbd>⇨</kbd>     | select last item                                      |
+|<kbd>Home</kbd>/<kbd>⇦</kbd>    | select first item                                     | 
+|<kbd>Shift</kdb>+<kbd>⇩</kbd>/<kbd>PgUp</kbd>/<kbd>Ctl</kbd>+<kbd>F</kbd>| next page    |
+|<kbd>Shift</kdb>+<kbd>⇧</kbd>/<kbd>PgDn</kbd>/<kbd>Ctl</kbd>+<kbd>B</kbd>| previous page|
+|<kbd>Del</kbd>/<kbd>F8</kbd>    | delete item in menu                                   |
+|<kbd>Esc</kbd>                  | exit                                                  |
+|<kbd>Ctrl</kbd>+<kbd>A</kbd>    | use all screen to display menu                        |
+|<kbd>Tab</kbd>                  | apply/new filter                                      |
+|<kbd>Enter</kbd>                | validate item selected                                |
 
 * filter pattern can be applied entering text (grep regexp)
 * selection can be done entering item number
 
 demo usage at:
-* [cdhist](https://github.com/joknarf/cdhist)
-* [redo](https://github.com/joknarf/redo)
-
+* [cdhist](https://github.com/joknarf/cdhist) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
+* [redo](https://github.com/joknarf/redo) : replacement for <kbd>Ctrl</kbd>+<R> and <kbd>Esc</kbd>+<kbd>/<kbd> to search in command history (bash/zsh)
+* [complete-ng](https://github.com/joknarf/complete-ng) : bash command line completion with multiple choices menu
