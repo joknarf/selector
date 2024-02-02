@@ -41,7 +41,7 @@ When sourced, the selected item is available as `$selected`.
 |<kbd>Tab</kbd>                  | apply/new filter                                      |
 |<kbd>Enter</kbd>                | validate item selected                                |
 
-* filter pattern can be applied entering text (grep regexp)
+* filter pattern can be applied entering text
 * selection can be done entering item number
 
 demo usage at:
