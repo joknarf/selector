@@ -156,9 +156,9 @@ function _domenu
         filter="";_select "$prompt" "1" "$nbitems" "$filter";;
       '[F'|'[C'|OC) #end or arrowright
         filter="";_select "$prompt" "nbitems" "$nbitems" "$filter";;
-      '[6~'|$'\x06') #pagedn Ctl-F
+      '[6~'|$'\x06'|'[1;2B') #pagedn Ctl-F shift-down
         filter="";_select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
-      '[5~'|$'\x02') #pageup Ctl-B
+      '[5~'|$'\x02'|'[1;2A') #pageup Ctl-B shift-up
         filter="";_select "$prompt" "_nsel-lines+1" "$nbitems" "$filter";;
       '[19~'|$'\x04'|'[3~') # F8 Ctl-D delete
         unset "_aitems[$_nsel]"
