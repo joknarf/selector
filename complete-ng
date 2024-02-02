@@ -33,12 +33,14 @@ _complete-ng_key() {
       return 0
     ;;
     'OR') # F3
+      _force_nsel=$_nsel
       [ -r "$item" ] && [ -f "$item" ] || return 0
       less -+X "$item"
       tput civis
       return 0
     ;;
     'OS') # F4
+      _force_nsel=$_nsel
       [ -r "$item" ] && [ -f "$item" ] || return 0
       ${EDITOR:-vi} "$item"
       tput civis
@@ -93,6 +95,8 @@ complete-ng() {
   done
   complete -F _complete-ng -D 2>/dev/null
   complete -F _complete-ng -I 2>/dev/null
+  complete -F _complete-ng -E 2>/dev/null
+  complete -F _complete-ng ''
 }
 
 #complete-ng $(complete |awk '/-F (_longopt|_filedir_xspec|_systemctl|_service|_command|_sudo|_root_command)/{print $NF}')
