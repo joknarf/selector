@@ -95,8 +95,8 @@ function _items_split
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
   IFS=$'\n'
-  # ZSH array index starts at 1
-  [ "$ZSH_VERSION" ] && _aitems=( ${=_items} ) || { _aitems=( _ $_items ); unset '_aitems[0]'; }
+  # ZSH array index starts at 1 / cannot use ${=_items} as ksh raises error
+  [ "$ZSH_VERSION" ] && _aitems=( $(echo $_items) ) || { _aitems=( _ $_items ); unset '_aitems[0]'; }
   IFS=$' \t\n'
 }
 
