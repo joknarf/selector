@@ -51,7 +51,7 @@ function _showmenu
     [ "$_sel_option" = filenames ] && {
       [[ "$item" = \~/* ]] && fpath="$HOME/"${item#\~/} || fpath="$item"
       if [ -d "$fpath" ] ;then icon="$SELECTOR_FOLDER_ICON "
-      else [ -e "$fpath" -o -L "$fpath" ] && icon="$SELECTOR_FILE_ICON ";fi
+      else [[ -e "$fpath" || -L "$fpath" ]] && icon="$SELECTOR_FILE_ICON ";fi
     }
     if [[ $nsel == "$i" ]]; then 
       printf "$sel" $i "$icon$item"
