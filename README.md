@@ -33,11 +33,11 @@ When sourced, the selected item is available as `$selected`.
 |<kbd>⇧</kbd>                    | select prev item                                      |
 |<kbd>End</kbd>/<kbd>⇨</kbd>     | select last item                                      |
 |<kbd>Home</kbd>/<kbd>⇦</kbd>    | select first item                                     | 
-|<kbd>Shift</kdb>+<kbd>⇩</kbd>/<kbd>PgUp</kbd>/<kbd>Ctl</kbd>+<kbd>F</kbd>| next page    |
-|<kbd>Shift</kdb>+<kbd>⇧</kbd>/<kbd>PgDn</kbd>/<kbd>Ctl</kbd>+<kbd>B</kbd>| previous page|
+|<kbd>Shift</kbd><kbd>⇩</kbd>/<kbd>PgUp</kbd>/<kbd>Ctl</kbd><kbd>F</kbd>| next page    |
+|<kbd>Shift</kbd><kbd>⇧</kbd>/<kbd>PgDn</kbd>/<kbd>Ctl</kbd><kbd>B</kbd>| previous page|
 |<kbd>Del</kbd>/<kbd>F8</kbd>    | delete item in menu                                   |
 |<kbd>Esc</kbd>                  | exit                                                  |
-|<kbd>Ctrl</kbd>+<kbd>A</kbd>    | use all screen to display menu                        |
+|<kbd>Ctrl</kbd><kbd>A</kbd>    | use all screen to display menu                        |
 |<kbd>Tab</kbd>                  | apply/new filter                                      |
 |<kbd>Enter</kbd>                | validate item selected                                |
 
@@ -46,5 +46,5 @@ When sourced, the selected item is available as `$selected`.
 
 demo usage at:
 * [cdhist](https://github.com/joknarf/cdhist) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
-* [redo](https://github.com/joknarf/redo) : replacement for <kbd>Ctrl</kbd>+<kbd>R</kbd> and <kbd>Esc</kbd>+<kbd>/</kbd> to search in command history (bash/zsh)
+* [redo](https://github.com/joknarf/redo) : replacement for <kbd>Ctrl</kbd><kbd>R</kbd> and <kbd>Esc</kbd><kbd>/</kbd> to search in command history (bash/zsh)
 * [complete-ng](https://github.com/joknarf/complete-ng) : bash command line completion replacement for multiple choices output with interactive menu
