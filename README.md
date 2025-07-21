@@ -46,6 +46,6 @@ When sourced, the selected item is available as `$selected`.
 
 demo usage at:
 
-* [cdhist](https://github.com/joknarf/cdhist) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
+* [seedee](https://github.com/joknarf/seedee) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
 * [redo](https://github.com/joknarf/redo) : replacement for <kbd>Ctrl</kbd><kbd>R</kbd> and <kbd>Esc</kbd><kbd>/</kbd> to search in command history (bash/zsh)
 * [complete-ng](https://github.com/joknarf/complete-ng) : bash/zsh command line completion replacement for multiple choices output with interactive menu
