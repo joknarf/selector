@@ -18,7 +18,7 @@ args :
   -k, --keyfunc         Custom additional key function
 ```
 
-selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)
+selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)  
 When sourced, the selected item is available as `$selected`.
 
 ## demo
