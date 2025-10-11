@@ -284,13 +284,13 @@ function selector
     shift 2
   done
   _stty_ori=$(stty -g 2>/dev/null)
-  unset _sel_abort
-  stty intr ''
+  trap '' INT
+  stty intr '' 2>/dev/null
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
+  trap - INT
   stty $_stty_ori 2>/dev/null
   unset _items _maxlines _autofilter _keufunc _sel_option
-  [ ! "$_sel_abort" ] && [ "$selected" ] && printf "%s" "$selected" && return 0
-  unset _sel_abort
+  [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
 
