@@ -20,21 +20,22 @@ function _menuprompt
 
 function _showmenu 
 {
-  typeset prompt="$1" nsel="$2" nbitems="$3" filter="$4" item i min max sel lines icon fpath
+  typeset prompt="$1" filter="$4" item icon fpath sel
+  typeset -i nsel="$2" nbitems="$3" i min max lines w size
 
   _menuprompt "$prompt" "$nbitems" "$filter"
-  w=$nbitems;w=${#w}
+  w=${#nbitems}
   lines=${_maxlines:-$LINES}
-  [ $lines -ge $LINES ] && lines=$(($LINES-1))
-  min=$(($nsel-$lines+2))
+  [ $lines -ge $LINES ] && lines=LINES-1
+  min=nsel-lines+2
   [ "$min" -le 0 ] && min=1
-  max=$(($min+$lines-2))
+  max=min+lines-2
   i=0
   sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[1;96m %s\e[0m"
   [ "$_powerline" = y ] && sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m\e[0m\e[1;96m%s\e[0m"
   while [ $i -lt $nbitems ]
   do
-    i=$((i + 1))
+    i=i+1
     item="${_aitems[$i]}"
     [[ $i -ge $min ]] || continue
     [[ $i -le $max ]] || break
@@ -52,7 +53,7 @@ function _showmenu
     tput el #clear end of line
   done
   size=$nbitems
-  [ "$size" -gt $lines ] && size=$((lines-1))
+  [ "$size" -gt $lines ] && size=lines-1
   # back to top of menu
   tput ed
   tput cuu $size
@@ -113,6 +114,7 @@ function _readkey
 function _domenu 
 {
   typeset prompt="$1" filter="$2" nbitems o=n
+  typeset -i LINES
 
   printf "\r"
   tput el
