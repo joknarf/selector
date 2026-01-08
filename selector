@@ -53,7 +53,7 @@ function _showmenu
     tput el #clear end of line
   done
   size=$nbitems
-  [ "$size" -gt $lines ] && ((size=lines-1))
+  [ "$size" -ge $lines ] && ((size=lines-1))
   # back to top of menu
   tput ed
   tput cuu $size
