@@ -26,10 +26,10 @@ function _showmenu
   _menuprompt "$prompt" "$nbitems" "$filter"
   w=${#nbitems}
   lines=${_maxlines:-$LINES}
-  [ $lines -ge $LINES ] && lines=LINES-1
-  min=nsel-lines+2
+  [ $lines -ge $LINES ] && ((lines=LINES-1))
+  ((min=nsel-lines+2))
   [ "$min" -le 0 ] && min=1
-  max=min+lines-2
+  ((max=min+lines-2))
   i=0
   sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[1;96m %s\e[0m"
   [ "$_powerline" = y ] && sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m\e[0m\e[1;96m%s\e[0m"
@@ -53,7 +53,7 @@ function _showmenu
     tput el #clear end of line
   done
   size=$nbitems
-  [ "$size" -gt $lines ] && size=lines-1
+  [ "$size" -gt $lines ] && ((size=lines-1))
   # back to top of menu
   tput ed
   tput cuu $size
@@ -66,7 +66,7 @@ function _select
   typeset -i lines
 
   lines=${_maxlines:-$LINES}
-  [ $lines -ge $LINES ] && lines=LINES-1
+  [ $lines -ge $LINES ] && ((lines=LINES-1))
   _nsel=$(($newsel))
   [ $_nsel -lt 1 ] && _nsel=1
   [ $_nsel -ge $nbitems ] && _nsel=$nbitems
