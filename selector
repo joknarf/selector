@@ -51,14 +51,11 @@ function _showmenu
     fi
     tput el #clear end of line
   done
-  size=$((nbitems+1))
-  [ "$size" -gt $lines ] && size=$lines
+  size=$nbitems
+  [ "$size" -gt $lines ] && size=$((lines-1))
   # back to top of menu
   tput ed
-  i=1;while [ $i -lt $size ];do
-    echo cuu1
-    i=$((i + 1))
-  done | tput -S
+  tput cuu $size
   printf "\r" # begin of line
 }
 
