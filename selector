@@ -7,13 +7,12 @@
 : ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹  
 : ${SELECTOR_CASEI:=false}
 
+# split _items lines to index 1 array _aitems
 type mapfile >/dev/null 2>&1 && _items2array() { mapfile -t -O 1 _aitems <<<"$_items"; } || {
   [ "$ZSH_VERSION" ] && _items2array() { set -A _aitems ${(f)_items}; } || _items2array() {
     # ksh/bash3
     typeset o="$IFS"
-    IFS=$'\n';set -f
-    [ "$KSH_VERSION" ] && set -A _aitems _ $_items || aitems=( _ $_items )
-    set +f; IFS="$o"
+    IFS=$'\n'; set -f; _aitems=( _ $_items ); set +f; IFS="$o"
     unset '_aitems[0]'
   }
 }
