@@ -12,7 +12,7 @@ type mapfile >/dev/null 2>&1 && _lines2array() { mapfile -t -O 1 "$1"; } || {
     # ksh/bash3
     typeset o="$IFS" var="$1"
     IFS=$'\n';set -f
-    [ "$KSH_VERSION" ] && set -A $var _ $(</dev/stdin) || eval $var='( _ $(</dev/stdin) )'
+    [ "$KSH_VERSION" ] && set -A $var _ $(cat -) || eval $var='( _ $(</dev/stdin) )'
     set +f; IFS="$o"
     unset "$var[0]"
   }
@@ -120,7 +120,7 @@ function _readkey
 function _domenu 
 {
   typeset prompt="$1" filter="$2" nbitems o=n
-  typeset -i LINES
+  unset _nsel
 
   printf "\r"
   tput el
@@ -130,7 +130,6 @@ function _domenu
   nbitems=${#_aitems[@]}
   [ "$nbitems" = 1 ] && {
     selected="${_aitems[1]}"
-    unset _nsel
     return 0
   }
   _items_ori="$_items"
@@ -226,9 +225,6 @@ function _domenu
       *) break;
     esac
   done
-  unset _nsel
-  unset _aitems
-  unset _items_ori
   printf "\e[?7h" #wrap
   tput ed
   tput cnorm
@@ -288,11 +284,12 @@ function selector
     esac
     shift 2
   done
+  _aitems=( ) # ksh bug
   _stty_ori=$(stty -g </dev/tty 2>/dev/null)
   stty intr '' </dev/tty 2>/dev/null
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
   stty $_stty_ori </dev/tty 2>/dev/null
-  unset _items _maxlines _autofilter _keufunc _sel_option
+  unset _items _maxlines _autofilter _keufunc _sel_option _nsel _aitems _items_ori
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
