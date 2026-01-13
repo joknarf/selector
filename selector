@@ -7,6 +7,20 @@
 : ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹  
 : ${SELECTOR_CASEI:=false}
 
+[ "$ZSH_VERSION" ] && mapfile() {
+  # mapfile -t -O 1 var for zsh
+  typeset var=${@:$#}
+  set -A $var "${(@f)"$(</dev/stdin)"}"
+}
+type mapfile >/dev/null 2>&1 || mapfile() {
+  # mapfile -t -O 1 var for ksh/bash 3
+  typeset o="$IFS" var=${@:$#}
+  IFS=$'\n';set -f
+  [ "$KSH_VERSION" ] && set -A $var _ $(</dev/stdin) || eval $var='( _ $(</dev/stdin) )'
+  set +f; IFS="$o"
+  unset "$var[0]"
+}
+
 function _menuprompt
 {
   typeset form filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 " pl=""
@@ -84,13 +98,7 @@ function _items_split
   }
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
-  IFS=$'\n'
-  # disable globbing to prevent filenames expansion to cwd filenames
-  set -f
-  # ZSH array index starts at 1 / cannot use ${=_items} as ksh raises error
-  [ "$ZSH_VERSION" ] && _aitems=( $(printf '%s' $_items) ) || { _aitems=( _ $_items ); unset '_aitems[0]'; }
-  set +f
-  IFS=$' \t\n'
+  mapfile -t -O 1 _aitems <<<"$_items"
 }
 
 function _readkey
