@@ -7,14 +7,14 @@
 : ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹  
 : ${SELECTOR_CASEI:=false}
 
-type mapfile >/dev/null 2>&1 && _lines2array() { mapfile -t -O 1 "$1"; } || {
-  [ "$ZSH_VERSION" ] && _lines2array() { set -A "$1" "${(@f)"$(</dev/stdin)"}"; } || _lines2array() {
+type mapfile >/dev/null 2>&1 && _items2array() { mapfile -t -O 1 _aitems <<<"$_items"; } || {
+  [ "$ZSH_VERSION" ] && _items2array() { set -A _aitems ${(f)_items}; } || _items2array() {
     # ksh/bash3
-    typeset o="$IFS" var="$1"
+    typeset o="$IFS"
     IFS=$'\n';set -f
-    [ "$KSH_VERSION" ] && set -A $var _ $(cat -) || eval $var='( _ $(</dev/stdin) )'
+    [ "$KSH_VERSION" ] && set -A _aitems _ $_items || aitems=( _ $_items )
     set +f; IFS="$o"
-    unset "$var[0]"
+    unset '_aitems[0]'
   }
 }
 
@@ -95,7 +95,7 @@ function _items_split
   }
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
-  _lines2array _aitems <<<"$_items"
+  _items2array
 }
 
 function _readkey
