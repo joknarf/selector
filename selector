@@ -233,6 +233,7 @@ function _domenu
 function selector
 {
   typeset prompt filter
+  unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori
   prompt="select"
   selected=""
   _maxlines=0
@@ -289,7 +290,7 @@ function selector
   stty intr '' </dev/tty 2>/dev/null
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
   stty $_stty_ori </dev/tty 2>/dev/null
-  unset _items _maxlines _autofilter _keufunc _sel_option _nsel _aitems _items_ori
+  unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
