@@ -7,18 +7,15 @@
 : ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹  
 : ${SELECTOR_CASEI:=false}
 
-[ "$ZSH_VERSION" ] && mapfile() {
-  # mapfile -t -O 1 var for zsh
-  typeset var=${@:$#}
-  set -A $var "${(@f)"$(</dev/stdin)"}"
-}
-type mapfile >/dev/null 2>&1 || mapfile() {
-  # mapfile -t -O 1 var for ksh/bash 3
-  typeset o="$IFS" var=${@:$#}
-  IFS=$'\n';set -f
-  [ "$KSH_VERSION" ] && set -A $var _ $(</dev/stdin) || eval $var='( _ $(</dev/stdin) )'
-  set +f; IFS="$o"
-  unset "$var[0]"
+type mapfile >/dev/null 2>&1 && _lines2array() { mapfile -t -O 1 "$1"; } || {
+  [ "$ZSH_VERSION" ] && _lines2array() { set -A "$1" "${(@f)"$(</dev/stdin)"}"; } || _lines2array() {
+    # ksh/bash3
+    typeset o="$IFS" var="$1"
+    IFS=$'\n';set -f
+    [ "$KSH_VERSION" ] && set -A $var _ $(</dev/stdin) || eval $var='( _ $(</dev/stdin) )'
+    set +f; IFS="$o"
+    unset "$var[0]"
+  }
 }
 
 function _menuprompt
@@ -98,7 +95,7 @@ function _items_split
   }
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
-  mapfile -t -O 1 _aitems <<<"$_items"
+  _lines2array _aitems <<<"$_items"
 }
 
 function _readkey
