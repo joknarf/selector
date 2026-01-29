@@ -42,8 +42,8 @@ function _showmenu
   [ "$min" -le 0 ] && min=1
   ((max=min+lines-2))
   i=0
-  sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[1;96m %s\e[0m"
-  [ "$_powerline" = y ] && sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m\e[0m\e[1;96m%s\e[0m"
+  [ "$_powerline" = y ] && pl="" || pl="►"
+  sel="\n\e[30m\e[46m\e[97m %${w}s \e[0m\e[36m\e[46m\e[49m$pl\e[0m\e[1;96m%s\e[0m"
   while [ $i -lt $nbitems ]
   do
     i=i+1
