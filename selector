@@ -6,6 +6,7 @@
 : ${SELECTOR_FOLDER_ICON:=} # 🖿 🗀 📁 📂 🖿         
 : ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹  
 : ${SELECTOR_CASEI:=false}
+: ${SELECTOR_POWERLINE:=y}
 
 # split _items lines to index 1 array _aitems
 type mapfile >/dev/null 2>&1 && _items2array() { _aitems=(); mapfile -t -O 1 _aitems <<<"$_items"; } || {
@@ -237,7 +238,7 @@ function selector
   selected=""
   _maxlines=0
   _autofilter=y
-  _powerline=y
+  _powerline="$SELECTOR_POWERLINE"
   _keyfunc=""
   _sel_option=""
   while [ $# -gt 0 ]; do
