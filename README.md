@@ -55,6 +55,23 @@ When sourced, the selected item is available as `$selected`.
 * filter pattern can be applied entering text
 * selection can be done entering item number
 
+# customize
+
+selector menu can be customized setting following variables:
+```
+SELECTOR_FOLDER_ICON=🖿            # folder icon
+SELECTOR_FILE_ICON=📄             # file icon
+SELECTOR_CASEI=false               # case sensitivity filter
+SELECTOR_POWERLINE=y               # avoid using glyphs with 'n'
+SELECTOR_COL_PROMPT="30;90;180"    # blue
+SELECTOR_COL_TEXT="255;255;255"    # white
+SELECTOR_COL_TOTAL="32;64;64"      # darkggrey
+SELECTOR_COL_NUM="36;114;67"       # green
+SELECTOR_COL_ARROW="41;98;114"     # cyan
+SELECTOR_COL_ITEM="118;141;255"    # light blue
+SELECTOR_COL_SELECTED="42;221;244" # light cyan
+```
+
 demo usage at:
 
 * [seedee](https://github.com/joknarf/seedee) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
