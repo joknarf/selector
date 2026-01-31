@@ -24,7 +24,14 @@ Shell interactive menu (bash/zsh/ksh compatible)
 ## install
 
 Use a shell plugin manager like the famous [thefly](https://github.com/joknarf/thefly) or use your favorite OS package manager with [release](https://github.com/joknarf/selector/releases/latest) packages
-
+```
+fly add joknarf/selector
+or
+brew install joknarf/tools/selector
+dnf install https://github.com/joknarf/selector/releases/latest/download/selector.rpm
+...
+```
+see [joknarf tools](https://joknarf.github.io/joknarf-tools) for package repositories
 
 ## usage
 
