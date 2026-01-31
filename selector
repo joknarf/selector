@@ -7,7 +7,6 @@
 : ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹   📄
 : ${SELECTOR_CASEI:=false}
 : ${SELECTOR_POWERLINE:=y}
-# blue darkgray cyan green lblue
 : ${SELECTOR_COL_PROMPT:="30;90;180"} # blue
 : ${SELECTOR_COL_TEXT:="255;255;255"} # white
 : ${SELECTOR_COL_TOTAL:="32;64;64"}   # darkggrey
