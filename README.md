@@ -11,7 +11,7 @@ Shell interactive menu (bash/zsh/ksh compatible)
 ## features
 
 * dynamic interactive menu with items filtering / selection
-* custiomizable key interaction
+* customizable key interaction
 * possible display file/folder icons 
 * customizable colors
 
