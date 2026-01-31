@@ -17,7 +17,7 @@ Shell interactive menu (bash/zsh/ksh compatible)
 
 ## demo
 
-![selector](https://github.com/joknarf/selector/assets/10117818/586afdf3-fe0e-4801-b39e-db8efce6918c)
+![selector](https://github.com/user-attachments/assets/d3be018d-1a6e-4101-b292-8f1fd6744d67)
 
 ## usage
 
