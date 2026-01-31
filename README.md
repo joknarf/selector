@@ -8,6 +8,17 @@ Shell interactive menu (bash/zsh/ksh compatible)
 
 ![image](https://github.com/joknarf/selector/assets/10117818/c3c782eb-ad34-4c31-b806-fbd30270f03a)
 
+## features
+
+* dynamic interactive menu with items filtering / selection
+* custiomizable key interaction
+* possible display file/folder icons 
+* customizable colors
+
+## demo
+
+![selector](https://github.com/joknarf/selector/assets/10117818/586afdf3-fe0e-4801-b39e-db8efce6918c)
+
 ## usage
 
 ```
@@ -24,10 +35,6 @@ args :
 
 selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)  
 When sourced, the selected item is available as `$selected`.
-
-## demo
-
-![selector](https://github.com/joknarf/selector/assets/10117818/586afdf3-fe0e-4801-b39e-db8efce6918c)
 
 ## keys
 
