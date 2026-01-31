@@ -1,4 +1,6 @@
 [![Joknarf Tools](https://img.shields.io/badge/Joknarf%20Tools-Visit-darkgreen?logo=github)](https://joknarf.github.io/joknarf-tools)
+[![Build and Release Packages](https://github.com/joknarf/selector/actions/workflows/release.yml/badge.svg)](https://github.com/joknarf/selector/actions/workflows/release.yml)
+[![Packages](https://img.shields.io/badge/Packages-%20rpm%20|%20deb%20|%20pkg%20|%20apk%20|%20brew%20-darkgreen.svg)](https://github.com/joknarf/selector/releases/latest)
 [![bash](https://img.shields.io/badge/shell-bash%20|%20zsh%20|%20ksh%20-blue.svg)]()
 [![Licence](https://img.shields.io/badge/licence-MIT-blue.svg)](https://shields.io/)
 
@@ -18,6 +20,11 @@ Shell interactive menu (bash/zsh/ksh compatible)
 ## demo
 
 ![selector](https://github.com/user-attachments/assets/d3be018d-1a6e-4101-b292-8f1fd6744d67)
+
+## install
+
+Use a shell plugin manager like the famous [thefly](https://github.com/joknarf/thefly) or use your favorite OS package manager with [release](https://github.com/joknarf/selector/releases/latest) packages
+
 
 ## usage
 
