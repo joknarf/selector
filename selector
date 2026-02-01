@@ -27,10 +27,9 @@ type mapfile >/dev/null 2>&1 && _items2array() { _aitems=(); mapfile -t -O 1 _ai
 
 function _menuprompt
 {
-  typeset form filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 "
+  typeset filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 "
   printf "\r"
-  form="$bg${SELECTOR_COL_PROMPT}m$wfg $1 $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
-  printf "$form" "$nb" "$filter"
+  printf "$disp_form" "$1" "$nb" "$filter"
   tput el
   printf "\r"
 }
@@ -128,6 +127,8 @@ function _domenu
   typeset bg="\e[48;2;" fg="\e[38;2;" wfg="\e[38;2;${SELECTOR_COL_TEXT}m"
   typeset disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%s\e[0m"
   typeset disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%s\e[0m"
+  typeset disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
+
   [ "$_powerline" = "y" ] || pl="►"
   unset _nsel
 
