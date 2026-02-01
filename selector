@@ -27,11 +27,9 @@ type mapfile >/dev/null 2>&1 && _items2array() { _aitems=(); mapfile -t -O 1 _ai
 
 function _menuprompt
 {
-  typeset form filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 " pl="►"
+  typeset form filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 "
   printf "\r"
-  [ "$_powerline" = "y" ] && pl=""
   form="$bg${SELECTOR_COL_PROMPT}m$wfg $1 $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
-  printf "$form" "$nb" "$filter" >/tmp/form
   printf "$form" "$nb" "$filter"
   tput el
   printf "\r"
@@ -39,7 +37,7 @@ function _menuprompt
 
 function _showmenu
 {
-  typeset prompt="$1" filter="$4" item icon fpath sel
+  typeset prompt="$1" filter="$4" item icon fpath
   typeset -i nsel="$2" nbitems="$3" i min max lines w size
 
   _menuprompt "$prompt" "$nbitems" "$filter"
@@ -50,9 +48,6 @@ function _showmenu
   [ "$min" -le 0 ] && min=1
   ((max=min+lines-2))
   i=0
-  [ "$_powerline" = y ] && pl="" || pl="►"
-  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %${w}s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%s\e[0m"
-  disp_item="\n$fg${SELECTOR_COL_NUM}m %${w}s  $fg${SELECTOR_COL_ITEM}m%s\e[0m"
   
   while [ $i -lt $nbitems ]
   do
@@ -67,9 +62,9 @@ function _showmenu
       else [[ -e "$fpath" || -L "$fpath" ]] && icon="$SELECTOR_FILE_ICON ";fi
     }
     if [[ $nsel == "$i" ]]; then 
-      printf "$disp_item_sel" $i "$icon$item"
+      printf "$disp_item_sel" $w $i  "$icon$item"
     else
-      printf "$disp_item" $i "$icon$item"
+      printf "$disp_item" $w $i "$icon$item"
     fi
     tput el #clear end of line
   done
@@ -129,8 +124,11 @@ function _readkey
 
 function _domenu 
 {
-  typeset prompt="$1" filter="$2" nbitems o=n
+  typeset prompt="$1" filter="$2" nbitems o=n pl=""
   typeset bg="\e[48;2;" fg="\e[38;2;" wfg="\e[38;2;${SELECTOR_COL_TEXT}m"
+  typeset disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%s\e[0m"
+  typeset disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%s\e[0m"
+  [ "$_powerline" = "y" ] || pl="►"
   unset _nsel
 
   printf "\r"
