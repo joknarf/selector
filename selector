@@ -14,6 +14,31 @@
 : ${SELECTOR_COL_ARROW:="41;98;114"}  # cyan
 : ${SELECTOR_COL_ITEM:="118;141;255"} # light blue
 : ${SELECTOR_COL_SELECTED:="42;221;244"} # light cyan
+: ${SELECTOR_USE_TPUT:=false}         # use ansi 
+
+$SELECTOR_USE_TPUT && alias _tput=tput
+
+function _tput {
+    case "$1" in
+        # -------- Erase eol/eos ----------
+        el)  printf '\e[K' ;;
+        ed)    printf '\e[J' ;;
+        # -------- Cursor movement --------
+        cuu) printf '\e[%dA' "${2:-1}" ;;
+        cud) printf '\e[%dB' "${2:-1}" ;;
+        cuu1) printf '\e[1A' ;;
+        cud1) printf '\e[1B' ;;
+        cuf) printf '\e[%dC' "${2:-1}" ;;
+        cub) printf '\e[%dD' "${2:-1}" ;;
+        cuf1) printf '\e[1C' ;;
+        cub1) printf '\e[1D' ;;
+        # -------- Cursor visibility --------
+        civis) printf '\e[?25l' ;;
+        cnorm) printf '\e[?25h' ;;
+        *)  tput "$@" ;;
+    esac
+}
+
 
 # split _items lines to index 1 array _aitems
 type mapfile >/dev/null 2>&1 && _items2array() { _aitems=(); mapfile -t -O 1 _aitems <<<"$_items"; } || {
@@ -30,7 +55,7 @@ function _menuprompt
   typeset filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 "
   printf "\r"
   printf "$disp_form" "$1" "$nb" "$filter"
-  tput el
+  _tput el
   printf "\r"
 }
 
@@ -65,13 +90,13 @@ function _showmenu
     else
       printf "$disp_item" $w $i "$icon$item"
     fi
-    tput el #clear end of line
+    _tput el #clear end of line
   done
   size=$nbitems
   [ "$size" -ge $lines ] && ((size=lines-1))
   # back to top of menu
-  tput ed
-  tput cuu $size
+  _tput ed
+  _tput cuu $size
   printf "\r" # begin of line
 }
 
@@ -118,7 +143,7 @@ function _readkey
       '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
     esac
   done
-  printf "%s" "$key"
+  #printf "%s" "$key"
 }
 
 function _domenu 
@@ -127,7 +152,7 @@ function _domenu
   unset _nsel
 
   printf "\r"
-  tput el
+  _tput el
   [ "$ZSH_VERSION" ] && o=k
   _items_split "$filter"
   [ "$_items" ] || return 1
@@ -137,7 +162,7 @@ function _domenu
     return 0
   }
   _items_ori="$_items"
-  tput civis
+  _tput civis
   stty -echo </dev/tty 2>/dev/null
   printf "\e[?7l" # nowrap
   : ${LINES:=$(tput lines)}
@@ -145,9 +170,9 @@ function _domenu
   _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
   while true
   do
-    k="$(_readkey $o)"
+    _readkey $o #$key
     [ "$_keyfunc" ] && { # custom key control
-      $_keyfunc "$k" # 0: already managed / 1: managed exit / 2: default / 3: skip default
+      $_keyfunc "$key" # 0: already managed / 1: managed exit / 2: default / 3: skip default
       case "$?" in
         0) 
           _items_split "."
@@ -160,7 +185,7 @@ function _domenu
         3) continue;;
       esac
     }
-    case "$k" in
+    case "$key" in
       '[A'|OA) #up
         filter="";_select "$prompt" "_nsel-1" "$nbitems" "$filter";;
       '[B'|OB) #down
@@ -178,7 +203,7 @@ function _domenu
         [ "$ZSH_VERSION" ] && _aitems=("${(@)_aitems[1,$_nsel-1]}" "${(@)_aitems[$_nsel+1,$nbitems]}") ||\
           { _aitems=(_ "${_aitems[@]}") && unset '_aitems[0]'; }
         nbitems=${#_aitems[@]}
-        tput ed
+        _tput ed
         [ "$nbitems" = 0 ] && break
         filter="";_select "$prompt" "$_nsel" "$nbitems" "$filter";;
       $'\x7f'|$'\x08') #backspace
@@ -193,13 +218,13 @@ function _domenu
       $'\xf8') #meta (macos)
         break;;
       [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-]) 
-        filter="$filter$k"
+        filter="$filter$key"
         [ "$_autofilter" = y ] && [[ ! "$filter" =~ ^[0-9]+$ ]] && {
           _items_split "$filter"
           [ ! "$_items" ] && {
             printf "Not found !"
-            tput el
-            read -rs${o}1 -t 0.5 k 2>/dev/null
+            _tput el
+            read -rs${o}1 -t 0.5 key 2>/dev/null
             _items="$_items_ori"
             filter="${filter%?}"
             _nsel=""
@@ -224,14 +249,14 @@ function _domenu
         [ $nbitems = 1 ] && selected="${_aitems[1]}" && break
         _items_ori="$_items"
         filter=""
-        tput ed
+        _tput ed
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
       *) break;
     esac
   done
   printf "\e[?7h" #wrap
-  tput ed
-  tput cnorm
+  _tput ed
+  _tput cnorm
 }
 
 function selector
@@ -300,7 +325,7 @@ function selector
   stty intr '' </dev/tty 2>/dev/null
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
   stty $_stty_ori </dev/tty 2>/dev/null
-  unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori disp_item_sel disp_item disp_form
+  unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori disp_item_sel disp_item disp_form key
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
