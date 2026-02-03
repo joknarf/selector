@@ -149,7 +149,7 @@ function _readkey
     [ ! "$k" ] && key=${key:-$'\x1b'} && break
     key+="$k"
     case "$key" in
-      '['[A-H]|'['*'~'|O[A-S]|'[1;2'[P-S]) break;;
+      '['[A-H]|'['*'~'|O[A-S]|'[1;2'[ABP-S]) break;;
     esac
   done
   #printf "%s" "$key"
@@ -199,9 +199,9 @@ function _domenu
         filter="";_select "$prompt" "_nsel-1" "$nbitems" "$filter";;
       '[B'|OB) #down
         filter="";_select "$prompt" "_nsel+1" "$nbitems" "$filter";;
-      '[H'|'[D'|OD) #home or arrowleft
+      '[H'|'[D'|OD|'[1;5H') #home or arrowleft
         filter="";_select "$prompt" "1" "$nbitems" "$filter";;
-      '[F'|'[C'|OC) #end or arrowright
+      '[F'|'[C'|OC|'[1;5F') #end or arrowright
         filter="";_select "$prompt" "nbitems" "$nbitems" "$filter";;
       '[6~'|$'\x06'|'[1;2B') #pagedn Ctl-F shift-down
         filter="";_select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
@@ -248,18 +248,9 @@ function _domenu
       $'\x01') # Ctl-A => all
         unset _maxlines
         _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
-      $'\x0d'|''|$'\n') # enter
+      $'\x0d'|''|$'\n'|$'\t') # enter
         [[ "$filter" =~ ^[0-9]+$ ]] && selected="${_aitems[$filter]}" || selected="${_aitems[$_nsel]}"
-        break;;     
-      $'\t') # tab
-        _items_split "$filter"
-        [ ! "$_items" ] && break
-        nbitems=${#_aitems[@]}
-        [ $nbitems = 1 ] && selected="${_aitems[1]}" && break
-        _items_ori="$_items"
-        filter=""
-        _tput ed
-        _showmenu "$prompt" "$_nsel" "$nbitems" "$filter";;
+        break;;
       *) break;
     esac
   done
