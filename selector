@@ -37,11 +37,11 @@ function _tput {
         cnorm) printf '\e[?25h' ;;
         # -------- tty size -----------------
         lines)
-            [ ! "$LINES" ] && LINES=$(stty size) && LINES=${LINES% *}
+            [ ! "$LINES" ] && LINES=$(stty size </dev/tty) && LINES=${LINES% *}
             printf '%s\n' "${LINES:-24}"
             ;;
         cols)
-            [ ! "$COLUMNS" ] && COLUMNS=$(stty size) && COLUMNS=${COLUMNS#* }
+            [ ! "$COLUMNS" ] && COLUMNS=$(stty size </dev/tty) && COLUMNS=${COLUMNS#* }
             printf '%s\n' "${COLUMNS:-80}"
             ;;
         *)  tput "$@" ;;
