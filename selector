@@ -199,9 +199,9 @@ function _domenu
         filter="";_select "$prompt" "_nsel-1" "$nbitems" "$filter";;
       '[B'|OB) #down
         filter="";_select "$prompt" "_nsel+1" "$nbitems" "$filter";;
-      '[H'|'[D'|OD|'[1;5H') #home or arrowleft
+      '[H'|'[D'|OD|'[1;5H'|'[1;2D') #home or [shift] arrowleft 
         filter="";_select "$prompt" "1" "$nbitems" "$filter";;
-      '[F'|'[C'|OC|'[1;5F') #end or arrowright
+      '[F'|'[C'|OC|'[1;5F'|'[1;2C') #end or [shift] arrowright
         filter="";_select "$prompt" "nbitems" "$nbitems" "$filter";;
       '[6~'|$'\x06'|'[1;2B') #pagedn Ctl-F shift-down
         filter="";_select "$prompt" "_nsel+lines-1" "$nbitems" "$filter";;
