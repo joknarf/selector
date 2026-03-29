@@ -17,6 +17,7 @@
 : ${SELECTOR_USE_TPUT:=false}         # use ansi 
 
 $SELECTOR_USE_TPUT && alias _tput=tput
+type gnustty >/dev/null 2>&1 && _sel_stty='gnustty' || _sel_stty='stty'
 
 function _tput {
     case "$1" in
@@ -37,11 +38,11 @@ function _tput {
         cnorm) printf '\e[?25h' ;;
         # -------- tty size -----------------
         lines)
-            [ ! "$LINES" ] && LINES=$(stty size </dev/tty) && LINES=${LINES% *}
+            [ ! "$LINES" ] && LINES=$($_sel_stty size </dev/tty) && LINES=${LINES% *}
             printf '%s\n' "${LINES:-24}"
             ;;
         cols)
-            [ ! "$COLUMNS" ] && COLUMNS=$(stty size </dev/tty) && COLUMNS=${COLUMNS#* }
+            [ ! "$COLUMNS" ] && COLUMNS=$($_sel_stty size </dev/tty) && COLUMNS=${COLUMNS#* }
             printf '%s\n' "${COLUMNS:-80}"
             ;;
         *)  tput "$@" ;;
@@ -172,7 +173,7 @@ function _domenu
   }
   _items_ori="$_items"
   _tput civis
-  stty -echo </dev/tty 2>/dev/null
+  $_sel_stty -echo </dev/tty 2>/dev/null
   printf "\e[?7l" # nowrap
   : ${LINES:=$(_tput lines)}
   [ "$_maxlines" -gt 2 ] || unset _maxlines
@@ -321,10 +322,10 @@ function selector
   disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%s\e[0m"
   disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
   _aitems=( ) # ksh bug
-  _stty_ori=$(stty -g </dev/tty 2>/dev/null)
-  stty intr '' </dev/tty 2>/dev/null
+  _stty_ori=$($_sel_stty -g </dev/tty 2>/dev/null)
+  $_sel_stty intr '' </dev/tty 2>/dev/null
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
-  stty $_stty_ori </dev/tty 2>/dev/null
+  $_sel_stty $_stty_ori </dev/tty 2>/dev/null
   unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori disp_item_sel disp_item disp_form key
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
