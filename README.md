@@ -9,10 +9,14 @@
 Shell interactive menu (bash/zsh/ksh compatible)
 
 ![image](https://github.com/joknarf/selector/assets/10117818/c3c782eb-ad34-4c31-b806-fbd30270f03a)
+<img width="1686" height="186" alt="image" src="https://github.com/user-attachments/assets/e4f2236c-f117-4075-89be-bcb739da60e0" />
+
+<img width="1638" height="430" alt="image" src="https://github.com/user-attachments/assets/542a9892-78e9-4bec-b9ae-ea92b47cf2aa" />
 
 ## features
 
 * dynamic interactive menu with items filtering / selection
+* optional description of items
 * customizable key interaction
 * possible display file/folder icons 
 * customizable colors
