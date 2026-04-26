@@ -43,7 +43,7 @@ see [joknarf tools](https://joknarf.github.io/joknarf-tools) for package reposit
 usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]
 args :
   -p, --prompt          menu prompt
-  -i, --items           menu items \n separated
+  -i, --items           menu items \n separated [descriptions \t separated]
   -f, --file            file with items
   -F, --filter          regexp pattern filter items
   -P, --powerline       y or n, powerline symbol usage
