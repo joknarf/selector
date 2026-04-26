@@ -14,6 +14,7 @@
 : ${SELECTOR_COL_ARROW:="41;98;114"}  # cyan
 : ${SELECTOR_COL_ITEM:="118;141;255"} # light blue
 : ${SELECTOR_COL_SELECTED:="42;221;244"} # light cyan
+: ${SELECTOR_COL_COMMENT:="168;110;2"} # 
 : ${SELECTOR_USE_TPUT:=false}         # use ansi 
 
 $SELECTOR_USE_TPUT && alias _tput=tput
@@ -62,7 +63,7 @@ type mapfile >/dev/null 2>&1 && _items2array() { _aitems=(); mapfile -t -O 1 _ai
 
 function _menuprompt
 {
-  typeset filter="${3:-${_aitems[$_nsel]}}" nb="$_nsel/$2 "
+  typeset filter="${3:-${_aitems[$_nsel]%%$'\t'*}}" nb="$_nsel/$2 "
   printf "\r"
   printf "$disp_form" "$1" "$nb" "$filter"
   _tput el
@@ -72,23 +73,31 @@ function _menuprompt
 function _showmenu
 {
   typeset prompt="$1" filter="$4" item icon fpath
-  typeset -i nsel="$2" nbitems="$3" i min max lines w size
+  typeset -i nsel="$2" nbitems="$3" i min max maxw lines w size
 
   _menuprompt "$prompt" "$nbitems" "$filter"
-  w=${#nbitems}
   lines=${_maxlines:-$LINES}
-  [ $lines -ge $LINES ] && ((lines=LINES-1))
+  ((lines >= LINES)) && ((lines=LINES-1))
   ((min=nsel-lines+2))
-  [ "$min" -le 0 ] && min=1
+  ((min <= 0)) && min=1
   ((max=min+lines-2))
-  i=0
-  
-  while [ $i -lt $nbitems ]
+  ((max > nbitems)) && max=$nbitems
+  maxw=0
+  for ((i=min;i<=max;i++))
   do
-    i=i+1
+    item="${_aitems[$i]%%$'\t'*}"
+    ((${#item} > maxw)) && maxw=${#item}
+  done
+  ((maxw+=2))
+  w=${#nbitems}
+  for ((i=min;i<=max;i++))
+  do
     item="${_aitems[$i]}"
-    [[ $i -ge $min ]] || continue
-    [[ $i -le $max ]] || break
+    comment=""
+    [[ $item = *$'\t'* ]] && {
+      comment="┆ ${item#*$'\t'}"
+      item="${item%%$'\t'*}"
+    }
     icon=''
     [ "$_sel_option" = filenames ] && {
       [[ "$item" = \~/* ]] && fpath="$HOME/"${item#\~/} || fpath="$item"
@@ -96,9 +105,9 @@ function _showmenu
       else [[ -e "$fpath" || -L "$fpath" ]] && icon="$SELECTOR_FILE_ICON ";fi
     }
     if [[ $nsel == "$i" ]]; then 
-      printf "$disp_item_sel" $w $i  "$icon$item"
+      printf "$disp_item_sel" $w $i $maxw "$icon$item" "$comment"
     else
-      printf "$disp_item" $w $i "$icon$item"
+      printf "$disp_item" $w $i $maxw "$icon$item" "$comment"
     fi
     _tput el #clear end of line
   done
@@ -130,7 +139,7 @@ function _items_split
   [ "$filter" ] && {
     _nsel=""
     [ "$filter" = . ] && filter=""
-    [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(printf "%s" "$_items" |grep -F $gopt -- "$filter" 2>/dev/null|uniq)"
+    [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(grep -F $gopt -- "$filter" <<<"$_items"|uniq)"
   }
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
@@ -306,7 +315,7 @@ function selector
         printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>] [-k <keyfunc>]\n"
         printf "args :\n"
         printf "%s\n" "  -p, --prompt          menu prompt"
-        printf "%s\n" "  -i, --items           menu items \n separated"
+        printf "%s\n" "  -i, --items           menu items \n separated [description \t separated]"
         printf "%s\n" "  -f, --file            file with items"
         printf "%s\n" "  -F, --filter          regexp pattern filter items"
         printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
@@ -318,22 +327,24 @@ function selector
     shift 2
   done
   [ "$_powerline" = "y" ] || pl="►"
-  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%s\e[0m"
-  disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%s\e[0m"
+  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%-*s$fg${SELECTOR_COL_COMMENT}m%s\e[0m"
+  disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%-*s$fg${SELECTOR_COL_COMMENT}m%s\e[0m"
   disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
   _aitems=( ) # ksh bug
   _stty_ori=$($_sel_stty -g </dev/tty 2>/dev/null)
   $_sel_stty intr '' </dev/tty 2>/dev/null
-  LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
+#  LC_ALL=$__selector_lc 
+  _domenu "$prompt" "$filter" >&2
   $_sel_stty $_stty_ori </dev/tty 2>/dev/null
   unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori disp_item_sel disp_item disp_form key
+  selected="${selected%%$'\t'*}"
   [ "$selected" ] && printf "%s" "$selected" && return 0
   return 1
 }
 
-[[ "$LANG" = *UTF-8 ]] && __selector_lc="$LANG" || {
-  type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
-}
+#[[ "$LANG" = *UTF-8 ]] && __selector_lc="$LANG" || {
+#  type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __selector_lc=en_US.UTF-8 || __selector_lc=C.UTF-8
+#}
 
 [ "$1" ] && { selector "$@"; exit $?; }
 :
