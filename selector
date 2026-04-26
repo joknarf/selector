@@ -15,6 +15,7 @@
 : ${SELECTOR_COL_ITEM:="118;141;255"} # light blue
 : ${SELECTOR_COL_SELECTED:="42;221;244"} # light cyan
 : ${SELECTOR_COL_COMMENT:="168;110;2"} # 
+: ${SELECTOR_COL_COMSEL:="222;203;49"} # 
 : ${SELECTOR_USE_TPUT:=false}         # use ansi 
 
 $SELECTOR_USE_TPUT && alias _tput=tput
@@ -327,7 +328,7 @@ function selector
     shift 2
   done
   [ "$_powerline" = "y" ] || pl="►"
-  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%-*s$fg${SELECTOR_COL_COMMENT}m%s\e[0m"
+  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%-*s$fg${SELECTOR_COL_COMSEL}m%s\e[0m"
   disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%-*s$fg${SELECTOR_COL_COMMENT}m%s\e[0m"
   disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
   _aitems=( ) # ksh bug
