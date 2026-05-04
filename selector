@@ -3,20 +3,20 @@
 # Author: Franck Jouvanceau
 
 # Icons for -o filenames, can be overriden using env variables to fit terminal font
-: ${SELECTOR_FOLDER_ICON:=} # 🖿 🗀 📁 📂 🖿         
-: ${SELECTOR_FILE_ICON:=} #  🗎            🗋 🖹   📄
-: ${SELECTOR_CASEI:=false}
-: ${SELECTOR_POWERLINE:=y}
-: ${SELECTOR_COL_PROMPT:="30;90;180"} # blue
-: ${SELECTOR_COL_TEXT:="255;255;255"} # white
-: ${SELECTOR_COL_TOTAL:="32;64;64"}   # darkggrey
-: ${SELECTOR_COL_NUM:="36;114;67"}    # green
-: ${SELECTOR_COL_ARROW:="41;98;114"}  # cyan
-: ${SELECTOR_COL_ITEM:="118;141;255"} # light blue
-: ${SELECTOR_COL_SELECTED:="42;221;244"} # light cyan
-: ${SELECTOR_COL_COMMENT:="168;110;2"} # 
-: ${SELECTOR_COL_COMSEL:="222;203;49"} # 
-: ${SELECTOR_USE_TPUT:=false}         # use ansi 
+: "${SELECTOR_FOLDER_ICON:=}" # 🖿 🗀 📁 📂 🖿        
+: "${SELECTOR_FILE_ICON:=}" #  🗎            🗋 🖹   📄
+: "${SELECTOR_CASEI:=false}"
+: "${SELECTOR_POWERLINE:=y}"
+: "${SELECTOR_COL_PROMPT:=30;90;180}" # blue
+: "${SELECTOR_COL_TEXT:=255;255;255}" # white
+: "${SELECTOR_COL_TOTAL:=32;64;64}"   # darkggrey
+: "${SELECTOR_COL_NUM:=36;114;67}"    # green
+: "${SELECTOR_COL_ARROW:=41;98;114}"  # cyan
+: "${SELECTOR_COL_ITEM:=118;141;255}" # light blue
+: "${SELECTOR_COL_SELECTED:=42;221;244}" # light cyan
+: "${SELECTOR_COL_COMMENT:=168;110;2}" #
+: "${SELECTOR_COL_COMSEL:=222;203;49}" #
+: "${SELECTOR_USE_TPUT:=false}"        # use ansi
 
 $SELECTOR_USE_TPUT && alias _tput=tput
 type gnustty >/dev/null 2>&1 && _sel_stty='gnustty' || _sel_stty='stty'
@@ -126,10 +126,10 @@ function _select
   typeset -i lines
 
   lines=${_maxlines:-$LINES}
-  [ $lines -ge $LINES ] && ((lines=LINES-1))
-  _nsel=$(($newsel))
-  [ $_nsel -lt 1 ] && _nsel=1
-  [ $_nsel -ge $nbitems ] && _nsel=$nbitems
+  ((lines >= LINES)) && ((lines=LINES-1))
+  ((_nsel=newsel))
+  ((_nsel <1 )) && _nsel=1
+  ((_nsel >= nbitems)) && _nsel=$nbitems
   _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
 }
 
@@ -151,12 +151,12 @@ function _readkey
 {
   typeset o=${1:-n} k tmout=0.001
   [ "$KSH_VERSION" ] && tmout=0.01
-  IFS= read -rs${o}1 key
+  IFS= read -rs"$o"1 key
   [ "$key" = $'\x1b' ] && key="" && while true
   do
     k=""
-    LC_NUMERIC=C read -rs${o}1 -t $tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
-    [ $? = 1 ] && [ "$BASH" ] && read -rs${o}1 -t 1 k # old bash
+    LC_NUMERIC=C read -rs"$o"1 -t $tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
+    [ $? = 1 ] && [ "$BASH" ] && read -rs"$o"1 -t 1 k # old bash
     [ ! "$k" ] && key=${key:-$'\x1b'} && break
     key+="$k"
     case "$key" in
@@ -185,7 +185,7 @@ function _domenu
   _tput civis
   $_sel_stty -echo </dev/tty 2>/dev/null
   printf "\e[?7l" # nowrap
-  : ${LINES:=$(_tput lines)}
+  : "${LINES:=$(_tput lines)}"
   [ "$_maxlines" -gt 2 ] || unset _maxlines
   _showmenu "$prompt" "$_nsel" "$nbitems" "$filter"
   while true
@@ -232,7 +232,7 @@ function _domenu
         _nsel=""
         _items_split "$filter"
         nbitems=${#_aitems[@]}
-        [ $_autofilter = y ] && _showmenu "$prompt" "$_nsel" "$nbitems" "$filter" || \
+        [ "$_autofilter" = y ] && _showmenu "$prompt" "$_nsel" "$nbitems" "$filter" || \
           _menuprompt "$prompt" "$nbitems" "$filter"
         ;;
       $'\xf8') #meta (macos)
@@ -244,7 +244,7 @@ function _domenu
           [ ! "$_items" ] && {
             printf "Not found !"
             _tput el
-            read -rs${o}1 -t 0.5 key 2>/dev/null
+            read -rs"$o"1 -t 0.5 key 2>/dev/null
             _items="$_items_ori"
             filter="${filter%?}"
             _nsel=""
@@ -292,7 +292,7 @@ function selector
         [ "$2" ] && _items="$2" || return 1
         ;;
       -f|--file)
-        [ "$2" ] && _items="$(cat $2)" || return 1
+        [ "$2" ] && _items="$(cat "$2")" || return 1
         ;;
       -m|--max)
         [ "$2" ] && _maxlines="$(($2+1))" || return 1
@@ -335,7 +335,7 @@ function selector
   _stty_ori=$($_sel_stty -g </dev/tty 2>/dev/null)
   $_sel_stty intr '' </dev/tty 2>/dev/null
   LC_ALL=$__selector_lc _domenu "$prompt" "$filter" >&2
-  $_sel_stty $_stty_ori </dev/tty 2>/dev/null
+  $_sel_stty "$_stty_ori" </dev/tty 2>/dev/null
   unset _items _maxlines _autofilter _keyfunc _sel_option _nsel _aitems _items_ori disp_item_sel disp_item disp_form key
   selected="${selected%%$'\t'*}"
   [ "$selected" ] && printf "%s" "$selected" && return 0
