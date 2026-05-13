@@ -140,7 +140,7 @@ function _items_split
   [ "$filter" ] && {
     _nsel=""
     [ "$filter" = . ] && filter=""
-    [[ "$filter" =~ ^[0-9]+$ ]] && _nsel=$filter || _items="$(\grep -F $gopt -- "$filter" 2>/dev/null <<<"$_items"|uniq)"
+    _items="$(\grep -F $gopt -- "$filter" 2>/dev/null <<<"$_items"|uniq)"
   }
   [ "$_nsel" ] && _items="${_aitems[$_nsel]}"
   _nsel=1
