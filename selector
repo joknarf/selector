@@ -364,7 +364,7 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_expand _path_fprefix _path_rprefix e
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_expand _path_fprefix _path_rprefix _last_nsel e
   prompt='select'
   selected=''
   _maxlines=''
