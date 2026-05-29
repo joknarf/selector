@@ -20,7 +20,10 @@
 : "${SELECTOR_USE_TPUT:=false}"        # use ansi
 
 $SELECTOR_USE_TPUT && alias _tput=tput
-type gnustty >/dev/null 2>&1 && _sel_stty='gnustty' || _sel_stty='stty'
+type whence >/dev/null 2>&1 || whence() { type -p "$@"; }
+read _sel_stty <<<$(whence gnustty stty)
+read _sel_lesspipe <<<$(whence lesspipe.sh lesspipe)
+[ "$_sel_lesspipe" ] && _sel_lessopen="|$_sel_lesspipe %s"
 
 _tput() {
     case "$1" in
@@ -238,7 +241,7 @@ _file_keys() {
       _force_nsel=$_nsel
       [ -r "$item" ] && [ -f "$item" ] || return 0
       exec <&1
-      LESS='-+EX' ${PAGER:-less} "$item"
+      LESSOPEN="$_sel_lessopen" LESS='-+X -c' ${PAGER:-less} "$item"
       _tput civis
       return 0
     ;;
@@ -400,7 +403,8 @@ function selector
         ;;
       -o|--option)
         [ "$2" ] && _sel_option="$2" || return 1
-        [ "$_sel_option" = dirnames ] && _find_type=(-type d) || _find_type=()
+        _find_type=();set -A _find_type 2>/dev/null
+        [ "$_sel_option" = dirnames ] && _find_type=(-type d)
         ;;
       *)
         printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>] [-k <keyfunc>]\n"
