@@ -20,7 +20,7 @@
 : "${SELECTOR_USE_TPUT:=false}"        # use ansi
 
 $SELECTOR_USE_TPUT && alias _tput=tput
-type whence >/dev/null 2>&1 || whence() { type -p "$@"; }
+command -v whence >/dev/null || whence() { type -p "$@"; }
 read _sel_stty <<<$(whence gnustty stty)
 read _sel_lesspipe <<<$(whence lesspipe.sh lesspipe)
 [ "$_sel_lesspipe" ] && _sel_lessopen="|$_sel_lesspipe %s"
@@ -175,11 +175,32 @@ _path_expand() {
   }
 }
 
+_relpath() {
+    awk -v src="$1" -v dst="$2" '
+    BEGIN {
+        ns = split(substr(src, 2), s, "/")
+        nd = split(substr(dst, 2), d, "/")
+        # find common prefix length
+        for (i = 1; i <= ns && i <= nd && s[i] == d[i]; i++) ;
+        common = i - 1
+        rel = ""
+        # go up from src
+        for (i = common + 1; i <= ns; i++) rel = rel "../"
+        # descend into dst
+        for (i = common + 1; i <= nd; i++) rel = rel d[i] "/"
+        sub(/\/$/, "", rel)
+        print rel ? rel : "."
+    }'
+}
+
 _dirbrowse() {
-  typeset dir="$1" depth=${2:-1}
-  dir="${dir#../${PWD##*/}}"
-  : ${dir:=.}
-  $(\cd "$dir" >/dev/null 2>&1) || return 3
+  typeset dir="${1:-.}" depth=${2:-1} 
+  typeset apath=$(\cd "$dir" 2>&1||exit 1;pwd) || return 3
+  case "$apath" in
+    "$PWD") dir='.';;
+    "/") dir='/';;
+    *) dir="$(_relpath $PWD $apath)";;
+  esac
   [ "$depth" = 4 ] && printf "Searching directories..." >&2
   _items="$(find -L "$dir" -xdev -mindepth 1 -maxdepth "$depth" "${_find_type[@]}" -print 2>/dev/null|\
     sed -e "s#^$_path_rprefix#$_path_fprefix#" -e s"#^$HOME/#\~/#" -e 's#^\./##' |sort)"
@@ -207,15 +228,7 @@ _file_keys() {
       _path_rprefix=''
       _path_fprefix=''
       [[ "$item" = */* ]] && item="${item%/*}" || item="."
-      : ${item:=/}
-      case "$item" in
-        .) item='..';;
-        ../*|..) item="$item/..";;
-        */*) item="${item%/*}";: ${item:=/};;
-        *) item='.';;
-      esac
-      [ "$(\cd "$item" >/dev/null;pwd)" = / ] && item=/
-      _dirbrowse "$item"
+      _dirbrowse "$item/.."
       _force_nsel=$_last_nsel
       unset _last_nsel
       return 0
@@ -237,15 +250,15 @@ _file_keys() {
       [ "$_items" ] || return 1
       return 0
     ;;
-    'OR') # F3
+    'OR'|$'\x12') # F3 Ctrl-R
       _force_nsel=$_nsel
       [ -r "$item" ] && [ -f "$item" ] || return 0
       exec <&1
-      LESSOPEN="$_sel_lessopen" LESS='-+X -c' ${PAGER:-less} "$item"
+      LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -Rc' ${PAGER:-less} "$item"
       _tput civis
       return 0
     ;;
-    'OS') # F4
+    'OS'|$'\x05') # F4 Ctrl-E
       _force_nsel=$_nsel
       [ -r "$item" ] && [ -f "$item" ] || return 0
       exec <&1
