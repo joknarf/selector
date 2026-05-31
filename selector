@@ -6,6 +6,7 @@
 : "${SELECTOR_FOLDER_ICON:=}" # 🖿 🗀 📁 📂 🖿        
 : "${SELECTOR_FILE_ICON:=}" #  🗎            🗋 🖹   📄
 : "${SELECTOR_LINK_ICON:=}"
+: "${SELECTOR_ARCH_ICON:=}"
 : "${SELECTOR_CASEI:=false}"
 : "${SELECTOR_POWERLINE:=y}"
 : "${SELECTOR_COL_PROMPT:=30;90;180}" # blue
@@ -77,7 +78,7 @@ _menuprompt()
 
 _showmenu()
 {
-  typeset item icon fpath comment
+  typeset item icon fpath comment ritem
   typeset -i i min max maxiw maxw maxcw w size
 
   _nsel="${1:-$_nsel}"
@@ -112,16 +113,20 @@ _showmenu()
       item="${item%%$'\t'*}"
     }
     icon=''
+    ritem="$item"
     [ "$_sel_option" ] && {
-      _path_expand "$item"
-      if [ -L "$_path_expand" ]; then icon="$SELECTOR_LINK_ICON "
-      elif [ -d "$_path_expand" ] ;then icon="$SELECTOR_FOLDER_ICON "
-      else [ -e "$_path_expand" ] && icon="$SELECTOR_FILE_ICON ";fi
+      _item_expand
+      if [ -L "$item" ]; then icon="$SELECTOR_LINK_ICON "
+      elif [ -d "$item" ] ;then icon="$SELECTOR_FOLDER_ICON ";fi
+      [ ! "$icon" ] && [ -e "$item" ] && case "$item" in
+        *.tar|*.tar.?z|*.t?z|*.zip|*.rar|*.jar|*.rpm|*.deb) icon="$SELECTOR_ARCH_ICON ";;
+        *) icon="$SELECTOR_FILE_ICON ";;
+      esac
     }
     if ((_nsel == i)); then
-      printf "$disp_item_sel" $w $i $maxw "$icon${item:0:$maxiw}" "${comment:0:$maxcw}"
+      printf "$disp_item_sel" $w $i $maxw "$icon${ritem:0:$maxiw}" "${comment:0:$maxcw}"
     else
-      printf "$disp_item" $w $i $maxw "$icon${item:0:$maxiw}" "${comment:0:$maxcw}"
+      printf "$disp_item" $w $i $maxw "$icon${ritem:0:$maxiw}" "${comment:0:$maxcw}"
     fi
     _tput el #clear end of line
   done
@@ -166,41 +171,51 @@ _readkey()
   #printf "%s" "$key"
 }
 
-_path_expand() {
-  _path_expand="$1" _path_fprefix='' _path_rprefix=''
-  [[ $1 =~ ^[~$][A-Za-z0-9_]*(/|$) ]] && {
-    _path_fprefix="${1%%/*}"
+_item_expand() {
+  item="${1:-$item}" _path_fprefix='' _path_rprefix=''
+  [[ $item =~ ^[~$][A-Za-z0-9_]*(/|$) ]] && {
+    _path_fprefix="${item%%/*}"
     _path_rprefix="$(IFS=;eval printf %s ${_path_fprefix:0:1}${_path_fprefix:1})"
-    _path_expand="$_path_rprefix${1#$_path_fprefix}"
+    item="$_path_rprefix${item#$_path_fprefix}"
   }
+  return 0
 }
 
-_relpath() {
-    awk -v src="$1" -v dst="$2" '
-    BEGIN {
-        ns = split(substr(src, 2), s, "/")
-        nd = split(substr(dst, 2), d, "/")
-        # find common prefix length
-        for (i = 1; i <= ns && i <= nd && s[i] == d[i]; i++) ;
-        common = i - 1
-        rel = ""
-        # go up from src
-        for (i = common + 1; i <= ns; i++) rel = rel "../"
-        # descend into dst
-        for (i = common + 1; i <= nd; i++) rel = rel d[i] "/"
-        sub(/\/$/, "", rel)
-        print rel ? rel : "."
-    }'
+_view_file() {
+  [ "$archive" ] && {
+    case "$archive" in
+      *.zip|*.jar) item="${item#*[0-9][0-9]:[0-9][0-9]   }";;
+      *.rar) item="${item#*[0-9][0-9]:[0-9][0-9] *[A-F0-9][A-F0-9][A-F0-9]  }";;
+    esac
+    item="${item#*[0-9][0-9]:[0-9][0-9] }"
+    item="${item#* [0-9]  [0-9][0-9][0-9][0-9] }"
+    item="${item% *}"
+    _force_nsel=$_nsel
+    exec <&1
+    LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -Rc' ${PAGER:-less} "$archive:$item" 2>/dev/null || return 3
+    _tput civis
+    return 0
+  }
+  [ -r "$item" ] && [ -f "$item" ] || return 0
+  [ "$_sel_lesspipe" ] && case "$item" in
+    *.t?z|*.tar|*.tar.?z|*.rpm|*.zip|*.rar|*.jar|*.deb) 
+      _items="$(LESSQUIET=1 $_sel_lesspipe "$item:")"
+      [ "$_items" ] || _items="$(LESSQUIET=1 $_sel_lesspipe "$item")"
+      [ "$_items" ] || { _items="$_items_ori";return 3; }
+      archive="$item"
+      return 0
+    ;;
+  esac
+  _force_nsel=$_nsel
+  exec <&1
+  LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -Rc' ${PAGER:-less} "$item"
+  _tput civis
+  return 0
 }
 
 _dirbrowse() {
   typeset dir="${1:-.}" depth=${2:-1} 
-  typeset apath=$(\cd "$dir" 2>&1||exit 1;pwd) || return 3
-  case "$apath" in
-    "$PWD") dir='.';;
-    "/") dir='/';;
-    *) dir="$(_relpath $PWD $apath)";;
-  esac
+  dir=$(\cd "$dir" 2>&1||exit 1;pwd) || return 3
   [ "$depth" = 4 ] && printf "Searching directories..." >&2
   _items="$(find -L "$dir" -xdev -mindepth 1 -maxdepth "$depth" "${_find_type[@]}" -print 2>/dev/null|\
     sed -e "s#^$_path_rprefix#$_path_fprefix#" -e s"#^$HOME/#\~/#" -e 's#^\./##' |sort)"
@@ -209,11 +224,9 @@ _dirbrowse() {
   return 3
 }
 
-
 _file_keys() {
   typeset k="$1" item="${_aitems[$_nsel]}"
-  _path_expand "$item"
-  item="$_path_expand"
+  [ "$archive" ] || _item_expand 
   case "$k" in
     $'\t') # tab
       selected="$item"
@@ -221,14 +234,15 @@ _file_keys() {
     ;;
     '[C'|OC) # right
       [ ! "$filter" ] && _last_nsel=$_nsel
-      _dirbrowse "$item"
+      [ -d "$item" ] && _dirbrowse "$item" || _view_file
       return $?
     ;;
     '[D'|OD) # left
-      _path_rprefix=''
-      _path_fprefix=''
+      [ "$archive" ] && item="$archive" && _last_nsel=1
       [[ "$item" = */* ]] && item="${item%/*}" || item="."
-      _dirbrowse "$item/.."
+      [ "$archive" ] || { _path_rprefix=''; _path_fprefix=''; item="$item/.."; }
+      archive=''
+      _dirbrowse "$item"
       _force_nsel=$_last_nsel
       unset _last_nsel
       return 0
@@ -251,12 +265,8 @@ _file_keys() {
       return 0
     ;;
     'OR'|$'\x12') # F3 Ctrl-R
-      _force_nsel=$_nsel
-      [ -r "$item" ] && [ -f "$item" ] || return 0
-      exec <&1
-      LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -Rc' ${PAGER:-less} "$item"
-      _tput civis
-      return 0
+      _view_file
+      return $?
     ;;
     'OS'|$'\x05') # F4 Ctrl-E
       _force_nsel=$_nsel
@@ -380,7 +390,7 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_expand _path_fprefix _path_rprefix _last_nsel e
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel e archive
   prompt='select'
   selected=''
   _maxlines=''
