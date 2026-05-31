@@ -219,7 +219,7 @@ _dirbrowse() {
   [ "$depth" = 4 ] && printf "Searching directories..." >&2
   _items="$(find -L "$dir" -xdev -mindepth 1 -maxdepth "$depth" "${_find_type[@]}" -print 2>/dev/null|\
     sed -e "s#^$_path_rprefix#$_path_fprefix#" -e s"#^$HOME/#\~/#" -e 's#^\./##' |sort)"
-  [ "$_items" ] && _items_ori="$_items" && return 0
+  [ "$_items" ] && _items="$_items_ori" && return 0
   _items="$_items_ori"
   return 3
 }
@@ -234,8 +234,7 @@ _file_keys() {
     ;;
     '[C'|OC) # right
       [ ! "$filter" ] && _last_nsel=$_nsel
-      [ -d "$item" ] && _dirbrowse "$item" || _view_file
-      return $?
+      [ -d "$item" ] && { _dirbrowse "$item"; return $?; } || { _view_file; return $?; }
     ;;
     '[D'|OD) # left
       [ "$archive" ] && item="$archive" && _last_nsel=1
