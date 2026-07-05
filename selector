@@ -321,7 +321,7 @@ _sel_dirbrowse() {
 }
 
 _sel_file_keys() {
-  typeset k="$1"
+  typeset k="$1" ritem=$item
   [ "$archive" ] && _sel_item_arch || _sel_item_expand
   case "$k" in
     $'\t') # tab
@@ -396,6 +396,7 @@ _sel_file_keys() {
       return 0
     ;;
   esac
+  item="$ritem"
   return 2
 }
 
@@ -512,7 +513,7 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur item ritem
   [ "$ZSH_VERSION" ] || _a='_'
   prompt='select'
   selected=''
