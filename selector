@@ -21,14 +21,14 @@
 : "${SELECTOR_COL_COMSEL:=222;203;49}" #
 : "${SELECTOR_USE_TPUT:=false}"        # use ansi
 
-$SELECTOR_USE_TPUT && alias _tput=tput
+$SELECTOR_USE_TPUT && alias _sel_tput=tput
 command -v whence >/dev/null || whence() { type -p "$@"; }
 read _sel_stty < <(whence gnustty stty)
 read _sel_lesspipe < <(whence lesspipe.sh lesspipe)
 _sel_lesspipe="${_sel_lesspipe##*/}"
 [ "$_sel_lesspipe" ] && _sel_lessopen="|$_sel_lesspipe %s"
 
-_tput() {
+_sel_tput() {
     case "$1" in
         # -------- Erase eol/eos ----------
         el)  printf '\e[K' ;;
@@ -63,11 +63,11 @@ _sel_tty_init() {
   _stty_ori="$($_sel_stty -g </dev/tty 2>/dev/null)"
   $_sel_stty -echo </dev/tty 2>/dev/null
   [ "$LINES" ] || read -r LINES COLUMNS < <($_sel_stty size </dev/tty)
-  _tput civis
+  _sel_tput civis
   printf "\e[?7l" # nowrap
   : "${_maxlines:=$LINES}"
   ((_maxlines > 2)) || _maxlines=''
-  _init_filter
+  _sel_init_filter
   disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%-*s$fg${SELECTOR_COL_COMSEL}m%s\e[0m"
   disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%-*s$fg${SELECTOR_COL_COMMENT}m%s\e[0m"
   disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
@@ -78,54 +78,54 @@ _sel_tty_restore() {
   break=1
   $tty_init || return
 echo $$ $_sel_stty $_stty_ori >>/tmp/Tt
-  _tput ed >&2
-  _tput cnorm >&2
+  _sel_tput ed >&2
+  _sel_tput cnorm >&2
   trap - INT TERM
   $_sel_stty $_stty_ori </dev/tty
 }
 
-_load_items() {
+_sel_load_items() {
     typeset nb=1 it 
     stream=1
-    _init_filter
+    _sel_init_filter
     _aitems=();set -A _aitems 2>/dev/null
     while IFS=$'\n' read -r it;do
         [ "$break" ] && return
         _aitems[nb++]="$it"
-        ((${#_aitems[@]} == 2)) && _menuprompt "Loading..."
-        ((${#_aitems[@]} == _maxlines)) && { [ "$stream" ] && _showmenu; }
+        ((${#_aitems[@]} == 2)) && _sel_menuprompt "Loading..."
+        ((${#_aitems[@]} == _maxlines)) && { [ "$stream" ] && _sel_showmenu; }
     done
     nbitems=${#_aitems[@]}
     stream=''
     ((nbitems==1)) && selected="${_aitems[1]%%$'\t'*}" && return 0
-    ((nbitems>1)) && _menuprompt >&2
+    ((nbitems>1)) && _sel_menuprompt >&2
     return 0
 }
 
-_menuprompt()
+_sel_menuprompt()
 {
   typeset p="${1:-$prompt}" filt="${filter:-$item}"
   [ "$break" ] && return
   _sel_tty_init
   printf "\r"
   printf "$disp_form" "$p" "$_nsel/$nbitems" "$filt"
-  _tput el
+  _sel_tput el
   printf "\r"
 }
 
-_showmenu()
+_sel_showmenu()
 {
   typeset icon fpath comment ritem cur
   typeset -i i j min max maxiw maxw maxcw w size
 
   [ "$break" ] && return
   _nsel="${1:-$_nsel}"
-  _nbitems
+  _sel_nbitems
   ((_nsel < 1)) && _nsel=1
   ((_nsel > nbitems)) && ((_nsel=nbitems))
   ((${#filtered[@]})) && ((cur=filtered[_nsel])) || ((cur=_nsel))
   item="${_aitems[cur]%%$'\t'*}"
-  _menuprompt ${stream:+Loading...}
+  _sel_menuprompt ${stream:+Loading...}
   lines=${_maxlines:-$LINES}
   ((lines >= LINES)) && ((lines=LINES-1))
   ((min=_nsel-lines+2))
@@ -158,7 +158,7 @@ _showmenu()
     icon=''
     ritem="$item"
     [ "$_sel_option" ] && [ ! "$archive" ] && {
-      _item_expand
+      _sel_item_expand
       if [ ! -e "$item" ]; then icon="$SELECTOR_MISS_ICON "
       elif [ -L "$item" ]; then icon="$SELECTOR_LINK_ICON "
       elif [ -d "$item" ] ;then icon="$SELECTOR_FOLDER_ICON ";fi
@@ -172,34 +172,34 @@ _showmenu()
     else
       printf "$disp_item" $w $i $maxw "$icon${ritem:0:$maxiw}" "${comment:0:$maxcw}"
     fi
-    _tput el #clear end of line
+    _sel_tput el #clear end of line
   done
   size=$nbitems
   ((size >= lines)) && ((size=lines-1))
   # back to top of menu
-  _tput ed
-  _tput cuu $size
+  _sel_tput ed
+  _sel_tput cuu $size
   printf "\r" # begin of line
   item="${_aitems[cur]%%$'\t'*}"
 }
 
-_nbitems() {
+_sel_nbitems() {
   [ "${_aitems[0]}" ] && unset '_aitems[0]'
   ((${#filtered[@]})) && nbitems=${#filtered[@]} && return
   nbitems=${#_aitems[@]}
 }
 
-_init_filter() {
+_sel_init_filter() {
   filtered=();set -A filtered 2>/dev/null
   return 0
 }
 
-_items_filter()
+_sel_items_filter()
 {
   typeset filt="$1" gopt="" filtered_prev i j=1
   [ "$SELECTOR_CASEI" = true ] && gopt="-i"
   [ "$filt" ] && {
-    _nbitems
+    _sel_nbitems
     _nsel=''
     if ((${#filtered[@]}));then
       filtered_prev=("${filtered[@]}")
@@ -217,7 +217,7 @@ _items_filter()
   _nsel=1
 }
 
-_readkey()
+_sel_readkey()
 {
   typeset o=${1:-n} k tmout=0.001
   [ "$break" ] && return
@@ -237,7 +237,7 @@ _readkey()
   #printf "%s" "$key"
 }
 
-_item_expand() {
+_sel_item_expand() {
   item="${1:-$item}" _path_fprefix='' _path_rprefix=''
   [[ $item = [~]/* ]] && {
     _path_fprefix='~'
@@ -253,7 +253,7 @@ _item_expand() {
   return 0
 }
 
-_item_arch() {
+_sel_item_arch() {
   case "$archive" in
     *.zip|*.jar|*.whl) item="${item#*[0-9][0-9]:[0-9][0-9]   }";;
     *.rar) item="${item#*[0-9][0-9]:[0-9][0-9] *[A-F0-9][A-F0-9][A-F0-9]  }";;
@@ -262,14 +262,14 @@ _item_arch() {
   item="${item#*[0-9]  [0-9][0-9][0-9][0-9] }"
 }
 
-_view_file() {
+_sel_view_file() {
   typeset type="${item##*.}"
   [[ $item = $type || ${#type} -gt 4 ]] && type=:sh || type=''
   [ "$archive" ] && {
     _force_nsel=$_nsel
     exec <&1
     LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' less "$archive:$item$type" 2>/dev/null || return 3
-    _tput civis
+    _sel_tput civis
     return 0
   }
   _force_nsel=$_nsel
@@ -281,7 +281,7 @@ _view_file() {
       ((${#_items})) || _items="$(LESSQUIET=1 $_sel_lesspipe "$item")"
       ((${#_items})) || return 3
       _items_ori=("${_aitems[@]}")
-      _load_items <<<"$_items"
+      _sel_load_items <<<"$_items"
       archive="$item"
       _force_nsel=''
       return 0
@@ -289,27 +289,27 @@ _view_file() {
   esac
   exec <&1
   LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' less "$item$type" 2>/dev/null
-  _tput civis
+  _sel_tput civis
   return 0
 }
 
-_dirbrowse() {
+_sel_dirbrowse() {
   typeset dir="${1:-.}" 
   dir=$(\cd "$dir" >/dev/null 2>&1||exit 1;pwd) || return 3
   _items_ori=("${_aitems[@]}")
-  _menuprompt 'Loading...'
-  _load_items < <(find -L "$dir" -xdev -mindepth 1 -maxdepth "$depth" "${_find_type[@]}" -print 2>/dev/null|\
+  _sel_menuprompt 'Loading...'
+  _sel_load_items < <(find -L "$dir" -xdev -mindepth 1 -maxdepth "$depth" "${_find_type[@]}" -print 2>/dev/null|\
     sed -e "s#^$_path_rprefix#$_path_fprefix#" -e s"#^$HOME/#\~/#" -e 's#^\./##'|sort)
   ((${#_aitems[@]})) && _items_ori=("${_aitems[@]}") && return 0
   _aitems=($_a "${_items_ori[@]}")
-  _nbitems
-  _menuprompt
+  _sel_nbitems
+  _sel_menuprompt
   return 3
 }
 
-_file_keys() {
+_sel_file_keys() {
   typeset k="$1"
-  [ "$archive" ] && _item_arch || _item_expand
+  [ "$archive" ] && _sel_item_arch || _sel_item_expand
   case "$k" in
     $'\t') # tab
       [ "$archive" ] && {
@@ -321,9 +321,9 @@ _file_keys() {
       [ -d "$item" ] && {
         _last_nsel=$_nsel _last_items=("${_aitems[@]}") _last_items_ori=("${_items_ori[@]}")
         depth=1
-        _dirbrowse "$item"; return $?
+        _sel_dirbrowse "$item"; return $?
       }
-      _view_file; return $?
+      _sel_view_file; return $?
     ;;
     '[D'|OD) # left
       depth=1
@@ -331,14 +331,14 @@ _file_keys() {
         _aitems=($_a "${_last_items[@]}") _items_ori=("${_last_items_ori[@]}")
         _last_items='' _last_items_ori=''
         _force_nsel=$_last_nsel _last_nsel='' archive=''
-        _init_filter
+        _sel_init_filter
         return 0
       }
       [ "$archive" ] && item="$archive" && _last_nsel=1
       [[ "$item" = */* ]] && item="${item%/*}" || item="."
       [ "$archive" ] || { _path_rprefix=''; _path_fprefix=''; item="$item/.."; }
       archive=''
-      _dirbrowse "$item"
+      _sel_dirbrowse "$item"
       _force_nsel=$_last_nsel
       _last_nsel=''
       return 0
@@ -347,20 +347,20 @@ _file_keys() {
       [[ "$item" = */* ]] && item="${item%/*}" || item="."
       : ${item:=/}
       ((depth++))
-      _dirbrowse "$item"
-      _init_filter
-      _items_filter "$filter"
+      _sel_dirbrowse "$item"
+      _sel_init_filter
+      _sel_items_filter "$filter"
       return 0
     ;;
     '[1;2D') # shift left
       [[ "$item" = */* ]] && item="${item%/*}" || item="."
       : ${item:=/}
       depth=1
-      _dirbrowse "$item"
+      _sel_dirbrowse "$item"
       return 0
     ;;
     '²'|'OP') # F1
-      _load_items < <(printf "%s\n" "${_aitems[@]}"|grep -E -v '^\.[^/]|/\.')
+      _sel_load_items < <(printf "%s\n" "${_aitems[@]}"|grep -E -v '^\.[^/]|/\.')
       ((${#_aitems[@]})) || return 1
       return 0
     ;;
@@ -371,7 +371,7 @@ _file_keys() {
       }
     ;;
     'OR'|$'\x12') # F3 Ctrl-R
-      _view_file
+      _sel_view_file
       return $?
     ;;
     'OS'|$'\x05') # F4 Ctrl-E
@@ -379,45 +379,45 @@ _file_keys() {
       [ -r "$item" ] && [ -f "$item" ] || return 0
       exec <&1
       ${EDITOR:-vi} "$item"
-      _tput civis
+      _sel_tput civis
       return 0
     ;;
   esac
   return 2
 }
 
-_domenu()
+_sel_domenu()
 {
   typeset o=n _force_nsel item
   typeset -i lines
   _nsel=''
   printf "\r"
-  _tput el
+  _sel_tput el
   [ "$ZSH_VERSION" ] && o=k
   #_items_split "$filter"
-  _nbitems
+  _sel_nbitems
   ((nbitems)) || return 1
   ((nbitems == 1)) && {
     selected="${_aitems[1]}"
     return 0
   }
 
-  _showmenu
+  _sel_showmenu
   #_items_ori=("${_aitems[@]}")
   while true
   do
-    _readkey $o #$key
+    _sel_readkey $o #$key
     [ "$break" ] && break
     e=2
-    [ "$_sel_option" ] && { _file_keys "$key" ; e=$?; }
+    [ "$_sel_option" ] && { _sel_file_keys "$key" ; e=$?; }
     [ "$e" = 2 ] && [ "$_keyfunc" ] && { $_keyfunc "$key"; e=$?; }
     # 0: already managed / 1: managed exit / 2: default / 3: skip default
     case "$e" in
       0)
-        #_items_filter "."
+        #_sel_items_filter "."
         _nsel=1
         filter=""
-        _showmenu "${_force_nsel:-1}"
+        _sel_showmenu "${_force_nsel:-1}"
         _force_nsel=''
         continue;;
       1) break;;
@@ -425,17 +425,17 @@ _domenu()
     esac
     case "$key" in
       '[A'|OA) #up
-        filter='';_showmenu $((_nsel-1));;
+        filter='';_sel_showmenu $((_nsel-1));;
       '[B'|OB) #down
-        filter='';_showmenu $((_nsel+1));;
+        filter='';_sel_showmenu $((_nsel+1));;
       '[H'|'[D'|OD|OH|'[1;5H'|'[1;2D'|'[1~') #home or [shift] arrowleft
-        filter='';_showmenu 1;;
+        filter='';_sel_showmenu 1;;
       '[F'|'[C'|OC|OF|'[1;5F'|'[1;2C'|'[4~') #end or [shift] arrowright
-        filter='';_showmenu "$nbitems";;
+        filter='';_sel_showmenu "$nbitems";;
       '[6~'|$'\x06'|'[1;2B') #pagedn Ctl-F shift-down
-        filter='';_showmenu $((_nsel+lines-1));;
+        filter='';_sel_showmenu $((_nsel+lines-1));;
       '[5~'|$'\x02'|'[1;2A') #pageup Ctl-B shift-up
-        filter='';_showmenu $((_nsel-lines+1));;
+        filter='';_sel_showmenu $((_nsel-lines+1));;
       'OQ') # F2
         selected="${_sel_lesspipe:-cat} ${_aitems[$_nsel]}"
         break
@@ -445,38 +445,38 @@ _domenu()
         [ "$ZSH_VERSION" ] && _aitems=("${(@)_aitems[1,$_nsel-1]}" "${(@)_aitems[$_nsel+1,$nbitems]}") ||\
           { _aitems=(_ "${_aitems[@]}") && unset '_aitems[0]'; }
         nbitems=${#_aitems[@]}
-        _tput ed
+        _sel_tput ed
         [ "$nbitems" = 0 ] && break
-        filter='';_init_filter;_showmenu "$_nsel";;
+        filter='';_sel_init_filter;_sel_showmenu "$_nsel";;
       $'\x7f'|$'\x08') #backspace
         filter="${filter%?}"
-        _init_filter
+        _sel_init_filter
         _nsel=''
-        _items_filter "$filter"
-        [ "$_autofilter" = y ] && _showmenu || _menuprompt
+        _sel_items_filter "$filter"
+        [ "$_autofilter" = y ] && _sel_showmenu || _sel_menuprompt
         ;;
       $'\xf8') #meta (macos)
         break;;
       [[:graph:]]|" ") #text [a-zA-Z0-9/_?*\(\)\ .-])
         filter+="$key"
         [ "$_autofilter" = y ] && {
-          _items_filter "$filter"
+          _sel_items_filter "$filter"
           ((nbitems)) || {
             printf "Not found !"
-            _tput el
+            _sel_tput el
             read -rs"$o"1 -t 0.5 key 2>/dev/null
             filter="${filter%?}"
             _nsel=''
-            _items_filter "$filter"
+            _sel_items_filter "$filter"
           }
-          _showmenu
+          _sel_showmenu
         }
-        _menuprompt;;
+        _sel_menuprompt;;
       $'\x0c') # Ctl-L => refresh
-        _showmenu;;
+        _sel_showmenu;;
       $'\x01') # Ctl-A => all
         _maxlines=''
-        _showmenu;;
+        _sel_showmenu;;
       $'\x0d'|''|$'\n'|$'\t') # enter tab
         selected="$item"
         break;;
@@ -556,11 +556,11 @@ function selector
   [ ! "$stream" ] && ((${#_items}==0)) && return 1
   trap '_sel_tty_restore;return' INT TERM
   [ "$stream" ] && {
-    [ "$itemfile" = - ] && _load_items >&2 || _load_items < <(cat $itemfile) >&2
-  } || _load_items <<<"$_items" >&2
+    [ "$itemfile" = - ] && _sel_load_items >&2 || _sel_load_items < <(cat $itemfile) >&2
+  } || _sel_load_items <<<"$_items" >&2
   [ ! "$selected" ] && [ ! "$break" ] && {
     [ -t 0 ] || exec </dev/tty
-    [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _domenu >&2 || _domenu >&2
+    [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _sel_domenu >&2 || _sel_domenu >&2
   }
   _sel_tty_restore
   unset break
