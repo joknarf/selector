@@ -77,7 +77,6 @@ _sel_tty_init() {
 _sel_tty_restore() {
   break=1
   $tty_init || return
-echo $$ $_sel_stty $_stty_ori >>/tmp/Tt
   _sel_tput ed >&2
   _sel_tput cnorm >&2
   trap - INT TERM
@@ -115,15 +114,15 @@ _sel_menuprompt()
 
 _sel_showmenu()
 {
-  typeset icon fpath comment ritem cur
+  typeset icon fpath comment ritem
   typeset -i i j min max maxiw maxw maxcw w size
 
   [ "$break" ] && return
   _nsel="${1:-$_nsel}"
   _sel_nbitems
   ((_nsel < 1)) && _nsel=1
-  ((_nsel > nbitems)) && ((_nsel=nbitems))
   ((${#filtered[@]})) && ((cur=filtered[_nsel])) || ((cur=_nsel))
+  ((_nsel > nbitems)) && ((_nsel=nbitems))
   item="${_aitems[cur]%%$'\t'*}"
   _sel_menuprompt ${stream:+Loading...}
   lines=${_maxlines:-$LINES}
@@ -190,21 +189,22 @@ _sel_nbitems() {
 }
 
 _sel_init_filter() {
+  prev_filtered=($_a "${filtered[@]}")
+  [ "$_a" ] && unset 'prev_filtered[0]'
   filtered=();set -A filtered 2>/dev/null
   return 0
 }
 
 _sel_items_filter()
 {
-  typeset filt="$1" gopt="" filtered_prev i j=1
+  typeset filt="$1" gopt="" i j=1
   [ "$SELECTOR_CASEI" = true ] && gopt="-i"
   [ "$filt" ] && {
     _sel_nbitems
     _nsel=''
     if ((${#filtered[@]}));then
-      filtered_prev=("${filtered[@]}")
-      filtered=(); set -A filtered 2>/dev/null
-      for i in "${filtered_prev[@]}";do
+      _sel_init_filter
+      for i in "${prev_filtered[@]}";do
         [[ ${_aitems[$i]} = *$filt* ]] && filtered[j++]=$i
       done
     else
@@ -251,6 +251,19 @@ _sel_item_expand() {
     item="$_path_rprefix${item#$_path_fprefix}"
   }
   return 0
+}
+
+_sel_save_items() {
+  _items_ori=($_a "${_aitems[@]}")
+  prev_filtered=($_a "${filtered[@]}")
+  [ "$_a" ] && unset '_items_ori[0]' 'prev_filtered[0]'
+}
+
+_sel_restore_items() {
+  _aitems=($_a "{_itemsç_ori[@]}")
+  filtered=($_a "${prev_filtered[@]}")
+  [ "$_a" ] && unset '_aitems[0]' 'filtered[0]'
+  _sel_nbitems
 }
 
 _sel_item_arch() {
@@ -403,7 +416,6 @@ _sel_domenu()
   }
 
   _sel_showmenu
-  #_items_ori=("${_aitems[@]}")
   while true
   do
     _sel_readkey $o #$key
@@ -441,13 +453,22 @@ _sel_domenu()
         break
       ;;
       '[19~'|$'\x04'|'[3~') # F8 Ctl-D delete
-        unset "_aitems[$_nsel]"
-        [ "$ZSH_VERSION" ] && _aitems=("${(@)_aitems[1,$_nsel-1]}" "${(@)_aitems[$_nsel+1,$nbitems]}") ||\
+        _sel_nbitems
+        unset "_aitems[$cur]"
+        _sel_init_filter
+        i=1
+        for f in "${prev_filtered[@]}" ;do
+          ((f<cur)) && ((filtered[i]=f))
+          ((f>cur)) && ((filtered[i-1]=f-1))
+          ((i++))
+        done
+        [ "$ZSH_VERSION" ] && _aitems=("${(@)_aitems[1,$cur-1]}" "${(@)_aitems[$cur+1,$nbitems]}") ||\
           { _aitems=(_ "${_aitems[@]}") && unset '_aitems[0]'; }
-        nbitems=${#_aitems[@]}
+        _sel_nbitems
         _sel_tput ed
-        [ "$nbitems" = 0 ] && break
-        filter='';_sel_init_filter;_sel_showmenu "$_nsel";;
+        ((nbitems)) || break
+        _sel_showmenu "$_nsel"
+      ;;
       $'\x7f'|$'\x08') #backspace
         filter="${filter%?}"
         _sel_init_filter
@@ -491,7 +512,7 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered depth=1 tty_init=false _stty_ori i j lines
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur
   [ "$ZSH_VERSION" ] || _a='_'
   prompt='select'
   selected=''
