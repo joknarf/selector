@@ -27,6 +27,10 @@ read _sel_stty < <(whence gnustty stty)
 read _sel_lesspipe < <(whence lesspipe.sh lesspipe)
 _sel_lesspipe="${_sel_lesspipe##*/}"
 [ "$_sel_lesspipe" ] && _sel_lessopen="|$_sel_lesspipe %s"
+_sel_tmout=0.001
+[ "$KSH_VERSION" ] && _sel_tmout=0.01
+[[ "$BASH_VERSION" = 3.* ]] && _sel_tmout=1
+
 
 _sel_tput() {
     case "$1" in
@@ -96,7 +100,7 @@ _sel_tty_restore() {
 }
 
 _sel_load_items() {
-    typeset nb=1 it 
+    typeset nb=1 it s=$SECONDS
     stream=1
     _sel_init_filter
     _aitems=();set -A _aitems 2>/dev/null
@@ -104,8 +108,11 @@ _sel_load_items() {
         ((nb == 2)) && _sel_menuprompt "Loading..."
         ((nb == _maxlines)) && [ "$stream" ] && _sel_showmenu
         _aitems[nb++]="$it"
-        IFS= read -r -n1 -t 0 key </dev/tty
-        [[ $key == $'\003' ]] && { exec <&-; break; }
+        ((s!=SECONDS)) && {
+          IFS= read -rs -n1 -t $_sel_tmout key </dev/tty
+          [[ $key == $'\003' ]] && { exec <&-; break=1; break; }
+          ((s=SECONDS))
+        }
     done
     nbitems=${#_aitems[@]}
     stream=''
@@ -239,15 +246,13 @@ _sel_items_filter()
 
 _sel_readkey()
 {
-  typeset o=${1:-n} k tmout=0.001
+  typeset o=${1:-n} k 
   [ "$break" ] && return
-  [ "$KSH_VERSION" ] && tmout=0.01
   IFS= read -rs"$o"1 key
   [ "$key" = $'\x1b' ] && key="" && while [ ! "$break" ]
   do
     k=""
-    LC_NUMERIC=C read -rs"$o"1 -t $tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
-    [ $? = 1 ] && [ "$BASH" ] && read -rs"$o"1 -t 1 k # old bash
+    LC_NUMERIC=C read -rs"$o"1 -t $_sel_tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
     [ ! "$k" ] && key=${key:-$'\x1b'} && break
     key+="$k"
     case "$key" in
