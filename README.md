@@ -6,7 +6,8 @@
 
 # selector
 
-Shell interactive menu (bash/zsh/ksh compatible)
+Shell interactive menu (bash/zsh/ksh compatible)  
+Pure shell fzf-like
 
 ![image](https://github.com/joknarf/selector/assets/10117818/c3c782eb-ad34-4c31-b806-fbd30270f03a)
 <img width="1686" height="186" alt="image" src="https://github.com/user-attachments/assets/e4f2236c-f117-4075-89be-bcb739da60e0" />
