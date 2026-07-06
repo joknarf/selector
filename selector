@@ -58,18 +58,29 @@ _sel_tput() {
     esac
 }
 
+_sel_probe_smam() {
+  typeset row col o=n
+  [ "$ZSH_VERSION" ] && o=k
+  printf '\e7\e[?7l\e[%dG  \e[6n' "$COLUMNS" >/dev/tty
+  IFS= read -r$o 2 </dev/tty
+  IFS='[;' read -r -d R row col </dev/tty
+  printf '\e8\e[?7h' >/dev/tty
+  [ "$col" = "$COLUMNS" ] && SEL_SMAM=true || SEL_SMAM=false
+}
+
 _sel_tty_init() {
   $tty_init && return
   _stty_ori="$($_sel_stty -g </dev/tty 2>/dev/null)"
   $_sel_stty -echo </dev/tty 2>/dev/null
   [ "$LINES" ] || read -r LINES COLUMNS < <($_sel_stty size </dev/tty)
   _sel_tput civis
+  [ "$SEL_SMAM" ] || _sel_probe_smam
   printf "\e[?7l" # nowrap
   : "${_maxlines:=$LINES}"
   ((_maxlines > 2)) || _maxlines=''
   _sel_init_filter
-  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%-*s$fg${SELECTOR_COL_COMSEL}m%s\e[0m"
-  disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%-*s$fg${SELECTOR_COL_COMMENT}m%s\e[0m"
+  disp_item_sel="\n$bg${SELECTOR_COL_ARROW}m$wfg %*s $fg${SELECTOR_COL_ARROW}m\e[49m$pl$fg${SELECTOR_COL_SELECTED}m%-*s$fg${SELECTOR_COL_COMSEL}m %s\e[0m"
+  disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%-*s$fg${SELECTOR_COL_COMMENT}m %s\e[0m"
   disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
   tty_init=true
 }
@@ -80,7 +91,8 @@ _sel_tty_restore() {
   _sel_tput ed >&2
   _sel_tput cnorm >&2
   trap - INT TERM
-  $_sel_stty $_stty_ori </dev/tty
+  tty_init=false
+  $_sel_stty $_stty_ori </dev/tty >/dev/null 2>&1
 }
 
 _sel_load_items() {
@@ -103,11 +115,12 @@ _sel_load_items() {
 
 _sel_menuprompt()
 {
-  typeset p="${1:-$prompt}" filt="${filter:-$item}"
+  typeset p="${1:-$prompt}" filt="${filter:-$item}" s w
   [ "$break" ] && return
   _sel_tty_init
   printf "\r"
-  printf "$disp_form" "$p" "$_nsel/$nbitems" "$filt"
+  $SEL_SMAM && w=1000 || { s="  $p  $_nsel/$nbitems  "; ((w=COLUMNS-${#s})); }
+  printf "$disp_form" "$p" "$_nsel/$nbitems" "${filt:0:$w}"
   _sel_tput el
   printf "\r"
 }
@@ -121,8 +134,8 @@ _sel_showmenu()
   _nsel="${1:-$_nsel}"
   _sel_nbitems
   ((_nsel < 1)) && _nsel=1
-  ((${#filtered[@]})) && ((cur=filtered[_nsel])) || ((cur=_nsel))
   ((_nsel > nbitems)) && ((_nsel=nbitems))
+  ((${#filtered[@]})) && ((cur=filtered[_nsel])) || ((cur=_nsel))
   item="${_aitems[cur]%%$'\t'*}"
   _sel_menuprompt ${stream:+Loading...}
   lines=${_maxlines:-$LINES}
@@ -138,13 +151,19 @@ _sel_showmenu()
     item="${_aitems[$j]%%$'\t'*}"
     ((${#item} > maxw)) && maxw=${#item}
   done
-  ((maxw+=2))
-  [ "$_sel_option" ] && ((maxw+=3))
   w=${#nbitems}
-  ((maxiw=COLUMNS-w-4))
-  ((maxiw<0)) && maxiw=0
-  ((maxcw=maxiw-maxw))
-  ((maxcw<0)) && maxcw=0
+  [ "$_sel_option" ] && ((maxw+=2))
+  $SEL_SMAM && {
+    maxiw=1000
+    maxcw=1000
+  } || {
+    ((maxiw=COLUMNS-w-4))
+    [ "$_sel_option" ] && ((maxiw-=2))
+    ((maxiw<0)) && maxiw=0
+    ((maxiw<maxw)) && ((maxw=maxiw))
+    ((maxcw=maxiw-maxw-1))
+    ((maxcw<0)) && maxcw=0
+  }
   for ((i=min;i<=max;i++))
   do
     ((${#filtered[@]})) && ((j=filtered[i])) || ((j=i))
@@ -455,7 +474,6 @@ _sel_domenu()
       ;;
       '[19~'|$'\x04'|'[3~') # F8 Ctl-D delete
         _sel_nbitems
-        unset "_aitems[$cur]"
         _sel_init_filter
         i=1
         for f in "${prev_filtered[@]}" ;do
@@ -464,7 +482,7 @@ _sel_domenu()
           ((i++))
         done
         [ "$ZSH_VERSION" ] && _aitems=("${(@)_aitems[1,$cur-1]}" "${(@)_aitems[$cur+1,$nbitems]}") ||\
-          { _aitems=(_ "${_aitems[@]}") && unset '_aitems[0]'; }
+          { unset "_aitems[$cur]";_aitems=(_ "${_aitems[@]}") && unset '_aitems[0]'; }
         _sel_nbitems
         _sel_tput ed
         ((nbitems)) || break
@@ -495,6 +513,7 @@ _sel_domenu()
         }
         _sel_menuprompt;;
       $'\x0c') # Ctl-L => refresh
+        read -r LINES COLUMNS < <($_sel_stty size </dev/tty)
         _sel_showmenu;;
       $'\x01') # Ctl-A => all
         _maxlines=''
@@ -585,6 +604,7 @@ function selector
     [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _sel_domenu >&2 || _sel_domenu >&2
   }
   _sel_tty_restore
+  trap - INT TERM
   unset break
   selected="${selected%%$'\t'*}"
   [ "$selected" ] || return 1
@@ -596,7 +616,6 @@ function selector
 [[ "$LANG" = *UTF-8 ]] || {
   type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __sel_lc=en_US.UTF-8 || __sel_lc=C.UTF-8
 }
-
 [ "$1" ] && { selector "$@"; exit $?; }
 :
 
