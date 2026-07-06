@@ -94,7 +94,6 @@ _sel_tty_restore() {
   $tty_init || return
   _sel_tput ed >&2
   _sel_tput cnorm >&2
-  #trap - INT TERM
   tty_init=false
   $_sel_stty $_stty_ori </dev/tty >/dev/null 2>&1
 }
@@ -112,7 +111,7 @@ _sel_load_items() {
         ((sec=SECONDS))
         ((s<sec)) && {
           IFS= read -rs -n1 -t $_sel_tmout key </dev/tty
-          [[ $key == $'\003' ]] && { exec <&-; break=1; break; }
+          [[ $key == $'\003' ]] && { exec <&-; break; }
           ((s=SECONDS))
         }
     done
@@ -126,7 +125,6 @@ _sel_load_items() {
 _sel_menuprompt()
 {
   typeset p="${1:-$prompt}" filt="${filter:-$item}" s w
-  [ "$break" ] && return
   _sel_tty_init
   printf "\r"
   $SEL_SMAM && w=1000 || { s="  $p  $_nsel/$nbitems  "; ((w=COLUMNS-${#s})); }
@@ -140,7 +138,6 @@ _sel_showmenu()
   typeset icon fpath comment ritem
   typeset -i i j min max maxiw maxw maxcw w size
 
-  [ "$break" ] && return
   _nsel="${1:-$_nsel}"
   _sel_nbitems
   ((_nsel < 1)) && _nsel=1
@@ -249,10 +246,8 @@ _sel_items_filter()
 _sel_readkey()
 {
   typeset o=${1:-n} k 
-  [ "$break" ] && return
   IFS= read -rs"$o"1 key
-  [ "$key" = $'\x1b' ] && key="" && while [ ! "$break" ]
-  do
+  [ "$key" = $'\x1b' ] && key="" && while :; do
     k=""
     LC_NUMERIC=C read -rs"$o"1 -t $_sel_tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
     [ ! "$k" ] && key=${key:-$'\x1b'} && break
@@ -448,7 +443,6 @@ _sel_domenu()
   while true
   do
     _sel_readkey $o #$key
-    [ "$break" ] && break
     e=2
     [ "$_sel_option" ] && { _sel_file_keys "$key" ; e=$?; }
     [ "$e" = 2 ] && [ "$_keyfunc" ] && { $_keyfunc "$key"; e=$?; }
@@ -551,7 +545,6 @@ function selector
   _keyfunc=""
   _sel_option=""
   quiet=false
-  unset break
   
   while [ $# -gt 0 ]; do
     shift=2
@@ -604,17 +597,14 @@ function selector
   done
   [ "$_powerline" = "y" ] || pl="►"
   [ ! "$stream" ] && ((${#_items}==0)) && return 1
-  #trap '_sel_tty_restore;return' INT TERM
   [ "$stream" ] && {
     [ "$itemfile" = - ] && _sel_load_items >&2 || _sel_load_items <"$itemfile" >&2
   } || _sel_load_items <<<"$_items" >&2
-  [ ! "$selected" ] && [ ! "$break" ] && {
+  [ ! "$selected" ] && {
     [ -t 0 ] || exec </dev/tty
     [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _sel_domenu >&2 || _sel_domenu >&2
   }
   _sel_tty_restore
-  #trap - INT TERM
-  unset break
   selected="${selected%%$'\t'*}"
   [ "$selected" ] || return 1
   $quiet || printf "%s" "$selected"
