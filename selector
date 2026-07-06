@@ -313,8 +313,8 @@ _sel_view_file() {
       ((${#_items})) || _items="$(LESSQUIET=1 $_sel_lesspipe "$item")"
       ((${#_items})) || return 3
       _items_ori=("${_aitems[@]}")
-      _sel_load_items <<<"$_items"
       archive="$item"
+      _sel_load_items <<<"$_items"
       _force_nsel=''
       return 0
     ;;
@@ -341,6 +341,7 @@ _sel_dirbrowse() {
 
 _sel_file_keys() {
   typeset k="$1" ritem=$item
+
   [ "$archive" ] && _sel_item_arch || _sel_item_expand
   case "$k" in
     $'\t') # tab
