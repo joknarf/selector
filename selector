@@ -71,7 +71,7 @@ _sel_probe_smam() {
 _sel_tty_init() {
   $tty_init && return
   _stty_ori="$($_sel_stty -g </dev/tty 2>/dev/null)"
-  $_sel_stty -echo </dev/tty 2>/dev/null
+  $_sel_stty intr '' -echo </dev/tty 2>/dev/null
   [ "$LINES" ] || read -r LINES COLUMNS < <($_sel_stty size </dev/tty)
   _sel_tput civis
   [ "$SEL_SMAM" ] || _sel_probe_smam
@@ -90,7 +90,7 @@ _sel_tty_restore() {
   $tty_init || return
   _sel_tput ed >&2
   _sel_tput cnorm >&2
-  trap - INT TERM
+  #trap - INT TERM
   tty_init=false
   $_sel_stty $_stty_ori </dev/tty >/dev/null 2>&1
 }
@@ -101,10 +101,11 @@ _sel_load_items() {
     _sel_init_filter
     _aitems=();set -A _aitems 2>/dev/null
     while IFS=$'\n' read -r it;do
-        [ "$break" ] && return
+        ((nb == 2)) && _sel_menuprompt "Loading..."
+        ((nb == _maxlines)) && [ "$stream" ] && _sel_showmenu
         _aitems[nb++]="$it"
-        ((${#_aitems[@]} == 2)) && _sel_menuprompt "Loading..."
-        ((${#_aitems[@]} == _maxlines)) && { [ "$stream" ] && _sel_showmenu; }
+        IFS= read -r -n1 -t 0 key </dev/tty
+        [[ $key == $'\003' ]] && { exec <&-; break; }
     done
     nbitems=${#_aitems[@]}
     stream=''
@@ -596,7 +597,7 @@ function selector
   done
   [ "$_powerline" = "y" ] || pl="►"
   [ ! "$stream" ] && ((${#_items}==0)) && return 1
-  trap '_sel_tty_restore;return' INT TERM
+  #trap '_sel_tty_restore;return' INT TERM
   [ "$stream" ] && {
     [ "$itemfile" = - ] && _sel_load_items >&2 || _sel_load_items <"$itemfile" >&2
   } || _sel_load_items <<<"$_items" >&2
@@ -605,7 +606,7 @@ function selector
     [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _sel_domenu >&2 || _sel_domenu >&2
   }
   _sel_tty_restore
-  trap - INT TERM
+  #trap - INT TERM
   unset break
   selected="${selected%%$'\t'*}"
   [ "$selected" ] || return 1
