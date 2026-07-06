@@ -100,7 +100,8 @@ _sel_tty_restore() {
 }
 
 _sel_load_items() {
-    typeset nb=1 it s=$SECONDS
+    typeset nb=1 it
+    typeset -i s=$SECONDS
     stream=1
     _sel_init_filter
     _aitems=();set -A _aitems 2>/dev/null
@@ -108,7 +109,7 @@ _sel_load_items() {
         ((nb == 2)) && _sel_menuprompt "Loading..."
         ((nb == _maxlines)) && [ "$stream" ] && _sel_showmenu
         _aitems[nb++]="$it"
-        ((s!=SECONDS)) && {
+        ((s!=${SECONDS%.*})) && {
           IFS= read -rs -n1 -t $_sel_tmout key </dev/tty
           [[ $key == $'\003' ]] && { exec <&-; break=1; break; }
           ((s=SECONDS))
