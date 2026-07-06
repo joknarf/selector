@@ -597,7 +597,7 @@ function selector
   [ ! "$stream" ] && ((${#_items}==0)) && return 1
   trap '_sel_tty_restore;return' INT TERM
   [ "$stream" ] && {
-    [ "$itemfile" = - ] && _sel_load_items >&2 || _sel_load_items < <(cat $itemfile) >&2
+    [ "$itemfile" = - ] && _sel_load_items >&2 || _sel_load_items <"$itemfile" >&2
   } || _sel_load_items <<<"$_items" >&2
   [ ! "$selected" ] && [ ! "$break" ] && {
     [ -t 0 ] || exec </dev/tty
