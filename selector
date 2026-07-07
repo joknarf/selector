@@ -428,7 +428,6 @@ _sel_file_keys() {
 _sel_domenu()
 {
   typeset o=n _force_nsel
-  typeset -i lines
   _nsel=1
   [ "$ZSH_VERSION" ] && o=k
   ((nbitems)) || return 1
