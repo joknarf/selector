@@ -105,8 +105,8 @@ _sel_load_items() {
     _sel_init_filter
     _aitems=();set -A _aitems 2>/dev/null
     while IFS=$'\n' read -r it;do
-        ((nb == 2)) && _sel_menuprompt "Loading..."
-        ((nb == _maxlines)) && [ "$stream" ] && _sel_showmenu
+        ((nb == 2)) && _sel_menuprompt
+        ((nb == _maxlines)) && _sel_showmenu
         _aitems[nb++]="$it"
         ((sec=SECONDS))
         ((s<sec)) && {
@@ -124,11 +124,12 @@ _sel_load_items() {
 
 _sel_menuprompt()
 {
-  typeset p="${1:-$prompt}" filt="${filter:-$item}" s w
+  typeset p="${1:-$prompt}" filt="${filter:-$item}" s w nbi=$nbitems
   _sel_tty_init
   printf "\r"
-  $SEL_SMAM && w=1000 || { s="  $p  $_nsel/$nbitems  "; ((w=COLUMNS-${#s})); }
-  printf "$disp_form" "$p" "$_nsel/$nbitems" "${filt:0:$w}"
+  [ "$stream" ] && nbi='...'
+  $SEL_SMAM && w=1000 || { s="  $p  $_nsel/$nbi  "; ((w=COLUMNS-${#s})); }
+  printf "$disp_form" "$p" "$_nsel/$nbi" "${filt:0:$w}"
   _sel_tput el
   printf "\r"
 }
@@ -144,7 +145,7 @@ _sel_showmenu()
   ((_nsel > nbitems)) && ((_nsel=nbitems))
   ((${#filtered[@]})) && ((cur=filtered[_nsel])) || ((cur=_nsel))
   item="${_aitems[cur]%%$'\t'*}"
-  _sel_menuprompt ${stream:+Loading...}
+  _sel_menuprompt
   lines=${_maxlines:-$LINES}
   ((lines >= LINES)) && ((lines=LINES-1))
   ((min=_nsel-lines+2))
@@ -302,7 +303,7 @@ _sel_view_file() {
   [[ $item = $type || ${#type} -gt 4 ]] && type=:sh || type=''
   [ "$archive" ] && {
     _force_nsel=$_nsel
-    exec <&1
+    exec </dev/tty
     LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' less "$archive:$item$type" 2>/dev/null || return 3
     _sel_tput civis
     return 0
@@ -427,19 +428,10 @@ _sel_domenu()
 {
   typeset o=n _force_nsel item
   typeset -i lines
-  _nsel=''
-  printf "\r"
-  _sel_tput el
+  _nsel=1
   [ "$ZSH_VERSION" ] && o=k
-  #_items_split "$filter"
-  _sel_nbitems
   ((nbitems)) || return 1
-  ((nbitems == 1)) && {
-    selected="${_aitems[1]}"
-    return 0
-  }
-
-  _sel_showmenu
+  ((nbitems<_maxlines)) && _sel_showmenu
   while true
   do
     _sel_readkey $o #$key
