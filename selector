@@ -117,7 +117,8 @@ _sel_load_items() {
     done
     nbitems=${#_aitems[@]}
     stream=''
-    ((nbitems==1)) && selected="${_aitems[1]%%$'\t'*}" && return 0
+    item="${_aitems[1]%%$'\t'*}"
+    ((nbitems==1)) && selected="$item" && return 0
     ((nbitems>1)) && _sel_menuprompt >&2
     return 0
 }
@@ -426,7 +427,7 @@ _sel_file_keys() {
 
 _sel_domenu()
 {
-  typeset o=n _force_nsel item
+  typeset o=n _force_nsel
   typeset -i lines
   _nsel=1
   [ "$ZSH_VERSION" ] && o=k
@@ -527,11 +528,10 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur item ritem
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur item ritem itemfile
   [ "$ZSH_VERSION" ] || _a='_'
   prompt='select'
   selected=''
-  _maxlines=''
   _autofilter=y
   _powerline="$SELECTOR_POWERLINE"
   _keyfunc=""
@@ -548,7 +548,7 @@ function selector
         [ "$2" ] && _items="$2" || return 1
         ;;
       -f|--file)
-        [ "$2" ] && stream=1;itemfile="$2";#;_items="$(cat "$2")" || return 1
+        [ "$2" ] && itemfile="$2";
         ;;
       -m|--max)
         [ "$2" ] && _maxlines="$(($2+1))" || return 1
@@ -588,10 +588,11 @@ function selector
     shift $shift
   done
   [ "$_powerline" = "y" ] || pl="►"
-  [ ! "$stream" ] && ((${#_items}==0)) && return 1
-  [ "$stream" ] && {
-    [ "$itemfile" = - ] && _sel_load_items >&2 || _sel_load_items <"$itemfile" >&2
-  } || _sel_load_items <<<"$_items" >&2
+  case "$itemfile" in
+    -)  _sel_load_items >&2;;
+    '') _sel_load_items <<<"$_items" >&2;;
+    *)  _sel_load_items <"$itemfile" >&2;;
+  esac
   [ ! "$selected" ] && {
     [ -t 0 ] || exec </dev/tty
     [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _sel_domenu >&2 || _sel_domenu >&2
