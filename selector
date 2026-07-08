@@ -105,6 +105,7 @@ _sel_load_items() {
     _sel_init_filter
     _aitems=();set -A _aitems 2>/dev/null
     while IFS=$'\n' read -r it;do
+        [ "$it" ] || continue
         ((nb == 2)) && _sel_menuprompt
         ((nb == _maxlines)) && _sel_showmenu
         _aitems[nb++]="$it"
