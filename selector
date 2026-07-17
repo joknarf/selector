@@ -125,7 +125,7 @@ _sel_load_items() {
         ((sec=SECONDS))
         ((s<sec)) && {
           IFS= read -rs -n1 -t $_sel_tmout key </dev/tty
-          [[ $key == $'\003' ]] && { exec <&-; break; }
+          [[ $key == $'\003' ]] && break
           ((s=SECONDS))
         }
     done
@@ -313,7 +313,7 @@ _sel_save_items() {
 }
 
 _sel_restore_items() {
-  _aitems=($_a "{_items_ori[@]}")
+  _aitems=($_a "${_items_ori[@]}")
   filtered=($_a "${prev_filtered[@]}")
   [ "$_a" ] && unset '_aitems[0]' 'filtered[0]'
   _sel_nbitems
