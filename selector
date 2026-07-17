@@ -333,8 +333,8 @@ _sel_view_file() {
   [[ $item = $type || ${#type} -gt 4 ]] && type=:sh || type=''
   [ "$archive" ] && {
     _force_nsel=$_nsel
-    exec </dev/tty
-    LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' less "$archive:$item$type" 2>/dev/null || return 3
+    LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' \
+      less "$archive:$item$type" </dev/tty >/dev/tty 2>/dev/null || return 3
     _sel_tput civis
     return 0
   }
@@ -353,8 +353,8 @@ _sel_view_file() {
       return 0
     ;;
   esac
-  exec </dev/tty
-  LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' less "$item$type" 2>/dev/null
+  LESSQUIET=1 LESSOPEN="$_sel_lessopen" LESS='-+X -RSc' \
+    less "$item$type" </dev/tty >/dev/tty 2>/dev/null
   _sel_tput civis
   return 0
 }
@@ -444,8 +444,7 @@ _sel_file_keys() {
     'OS'|'ctrl-e') # F4 Ctrl-E
       _force_nsel=$_nsel
       [ -r "$item" ] && [ -f "$item" ] || return 0
-      exec </dev/tty
-      "${EDITOR:-vi}" "$item"
+      "${EDITOR:-vi}" "$item" </dev/tty >/dev/tty 2>/dev/tty
       _sel_tput civis
       return 0
     ;;
@@ -633,8 +632,11 @@ function selector
     *)  _sel_load_items <"$itemfile" >&2;;
   esac
   [ ! "$selected" ] && {
-    [ -t 0 ] || exec </dev/tty
-    [ "$__sel_lc" ] && LC_ALL="$__sel_lc" _sel_domenu >&2 || _sel_domenu >&2
+    if [ "$__sel_lc" ]; then
+      LC_ALL="$__sel_lc" _sel_domenu </dev/tty >&2
+    else
+      _sel_domenu </dev/tty >&2
+    fi
   }
   _sel_tty_restore
   selected="${selected%%$'\t'*}"
@@ -649,4 +651,3 @@ function selector
 }
 [ "$1" ] && { selector "$@"; exit $?; }
 :
-
