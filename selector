@@ -497,7 +497,7 @@ _sel_domenu()
         selected="$item"
         break;;
       'OQ') # F2
-        selected="${_sel_lesspipe:-cat} ${_aitems[$_nsel]}"
+        selected="${_sel_lesspipe:-cat} $(printf %q "$item")"
         break
       ;;
       '[19~'|ctrl-d|'[3~') # F8 Ctl-D delete
@@ -591,7 +591,7 @@ function selector
         [ "$2" ] && itemfile="$2" || return 1;
         ;;
       -m|--max)
-        [ "$2" ] && (($2>0)) || return 1; ((_maxlines=$2+1))
+        [[ $2 =~ ^[1-9][0-9]*$ ]] || return 1; ((_maxlines=$2+1))
         ;;
       -P|--powerline)
         [ "$2" ] && _powerline="$2" || return 1
@@ -638,7 +638,8 @@ EOF
     '') _sel_load_items <<<"$_items" >&2;;
     *)  _sel_load_items <"$itemfile" >&2;;
   esac
-  ((break==0)) && [ ! "$selected" ] && {
+  ((break)) && selected=''
+  [ ! "$selected" ] && {
     if [ "$__sel_lc" ]; then
       LC_ALL="$__sel_lc" _sel_domenu </dev/tty >&2
     else
