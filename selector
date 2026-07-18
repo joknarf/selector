@@ -22,19 +22,12 @@
 : "${SELECTOR_COL_CASEI:=255;255;100}" # IGNORECASE
 
 [ "$SELECTOR_USE_TPUT" ] && alias _sel_tput=tput
-command -v whence >/dev/null || whence() { type -p "$@"; }
-read _sel_stty < <(whence gnustty stty)
-read _sel_lesspipe < <(whence lesspipe.sh lesspipe)
-_sel_lesspipe="${_sel_lesspipe##*/}"
-[ "$_sel_lesspipe" ] && _sel_lessopen="|$_sel_lesspipe %s"
-_sel_tmout=0.01
-[[ "$BASH_VERSION" = 3.* ]] && _sel_tmout=1
-_sel_letters='abcdefghijklmnopqrstuvwxyz'
-_sel_stty_opt=()
 
 case "$BASH_VERSION$KSH_VERSION$ZSH_VERSION" in
+  '') return 1 2>/dev/null;exit 1;; # unsupported
   "$BASH_VERSION") _sel_upper() { eval $1='"${'$1'^^}"'; }
     _sel_keycode() { printf -v k '%d' "'$key"; }
+    whence() { type -p "$@"; }
   ;;
   "$ZSH_VERSION") _sel_upper() { eval $1='"${(U)'$1'}"'; }
     eval '_sel_keycode() { k=$((#key)); }'
@@ -44,6 +37,16 @@ case "$BASH_VERSION$KSH_VERSION$ZSH_VERSION" in
     _sel_stty_opt=(-echo)
   ;;
 esac
+
+read _sel_stty < <(whence gnustty stty)
+read _sel_lesspipe < <(whence lesspipe.sh lesspipe)
+_sel_lesspipe="${_sel_lesspipe##*/}"
+[ "$_sel_lesspipe" ] && _sel_lessopen="|$_sel_lesspipe %s"
+_sel_tmout=0.01
+[[ "$BASH_VERSION" = 3.* ]] && _sel_tmout=1
+_sel_letters='abcdefghijklmnopqrstuvwxyz'
+_sel_stty_opt=()
+
 
 _sel_tput() {
     case "$1" in
@@ -645,9 +648,11 @@ function selector
   return 0
 }
 
-
 [[ "$LANG" = *UTF-8 ]] || {
   type locale >/dev/null 2>/dev/null && locale -a |grep -iq "en_US.UTF-*8" && __sel_lc=en_US.UTF-8 || __sel_lc=C.UTF-8
 }
-[ "$1" ] && { selector "$@"; exit $?; }
-:
+
+# assume exec selector is using bash sheebang
+(return 0 2>/dev/null) && return 0
+selector "$@"
+
