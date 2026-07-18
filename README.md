@@ -76,9 +76,21 @@ When sourced, the selected item is available as `$selected`.
 |<kbd>Ctrl</kbd><kbd>A</kbd>    | use all screen to display menu                        |
 |<kbd>Tab</kbd>                  | apply/new filter                                      |
 |<kbd>Enter</kbd>                | validate item selected                                |
+|<kbd>Alt</kdb><kdb>i</kbd>      | switch ignore case on/off                             |
+|<kbd>Ctrl</kbd><kbd>L</kbd>     | refresh / resize menu according to term size          |
 
 * filter pattern can be applied entering text
 * selection can be done entering item number
+
+when `dirnames` or `filenames` option, additional keys can be used:
+|key                             | action                                                |
+|--------------------------------|-------------------------------------------------------|
+|<kbd>▶</kbd>                    | browse selected directory/view selected file           |
+|<kbd>◀</kbd>                    | browse parent directory                               |
+|<kbd>Shift</kbd><kbd>▶</kbd>   | browse selected directory with subdirectories depth +1  |
+|<kbd>Shift</kbd><kbd>◀</kbd>   | back to only show subdirectories depth 1               |
+|<kbd>F4</kbd>                    | edit file using EDITOR                                 |
+|<kdb>F1</kbd>                    | hide dotfiles                                          |
 
 # customize
 
