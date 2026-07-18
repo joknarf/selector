@@ -19,8 +19,10 @@ Pure shell fzf-like
 * dynamic interactive menu with items filtering / selection
 * optional description of items
 * customizable key interaction
-* possible display file/folder icons 
-* customizable colors
+* browse directories and display file/folder/links icons (using left/right arrows to navigate in directories)
+* view/edit files (right arrow on file/F4 to edit)
+* browse archive files/view files in archives (recent `lesspipe` needed)
+* customizable colors/icons
 
 ## demo
 
@@ -84,7 +86,7 @@ selector menu can be customized setting following variables:
 ```
 SELECTOR_FOLDER_ICON=🖿            # folder icon
 SELECTOR_FILE_ICON=📄             # file icon
-SELECTOR_CASEI=false               # case sensitivity filter
+SELECTOR_CASEI=0                   # ignore case filter 0/1
 SELECTOR_POWERLINE=y               # avoid using glyphs with 'n'
 SELECTOR_COL_PROMPT="30;90;180"    # blue
 SELECTOR_COL_TEXT="255;255;255"    # white
@@ -97,6 +99,7 @@ SELECTOR_COL_SELECTED="42;221;244" # light cyan
 
 demo usage at:
 
-* [seedee](https://github.com/joknarf/seedee) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
-* [redo](https://github.com/joknarf/redo) : replacement for <kbd>Ctrl</kbd><kbd>R</kbd> and <kbd>Esc</kbd><kbd>/</kbd> to search in command history (bash/zsh)
-* [complete-ng](https://github.com/joknarf/complete-ng) : bash/zsh command line completion replacement for multiple choices output with interactive menu
+* [shell-ng](https://github.com/joknarf/shell-ng) : bash/zsh/ksh shell next gen plugin, compilation including following plugins:
+  * [seedee](https://github.com/joknarf/seedee) : navigate in directories from command line with arrow keys with dir history (bash/zsh/ksh)
+  * [redo](https://github.com/joknarf/redo) : replacement for <kbd>Ctrl</kbd><kbd>R</kbd> and <kbd>Esc</kbd><kbd>/</kbd> to search in command history (bash/zsh)
+  * [complete-ng](https://github.com/joknarf/complete-ng) : bash/zsh command line completion replacement for multiple choices output with interactive menu
