@@ -624,7 +624,7 @@ EOF
     '') _sel_load_items <<<"$_items" >&2;;
     *)  _sel_load_items <"$itemfile" >&2;;
   esac
-  ((break)) && _sel_tty_restore && return 1
+  ((break)) && { selected=''; _sel_tty_restore; return 1; }
   [ ! "$selected" ] && {
     if [ "$__sel_lc" ]; then
       LC_ALL="$__sel_lc" _sel_domenu </dev/tty >&2
