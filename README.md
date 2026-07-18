@@ -90,7 +90,7 @@ when `dirnames` or `filenames` option, additional keys can be used:
 |<kbd>Shift</kbd><kbd>▶</kbd>   | browse selected directory with subdirectories depth +1  |
 |<kbd>Shift</kbd><kbd>◀</kbd>   | back to only show subdirectories depth 1               |
 |<kbd>F4</kbd>                    | edit file using EDITOR                                 |
-|<kdb>F1</kbd>                    | hide dotfiles                                          |
+|<kbd>F1</kbd>                    | hide dotfiles                                          |
 
 # customize
 
