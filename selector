@@ -129,7 +129,7 @@ _sel_load_items() {
         _aitems[nb++]="$it"
         ((sec=SECONDS))
         ((s<sec)) && {
-          IFS= read -rs -n1 -t $_sel_tmout key </dev/tty
+          IFS= read -rs"${_sel_rdn}" 1 -t $_sel_tmout key </dev/tty
           [[ $key == $'\003' ]] && break
           ((s=SECONDS))
         }
