@@ -23,6 +23,8 @@
 
 [ "$SELECTOR_USE_TPUT" ] && alias _sel_tput=tput
 
+_sel_stty_opt=()
+_sel_rdn='n'
 case "$BASH_VERSION$KSH_VERSION$ZSH_VERSION" in
   '') return 1 2>/dev/null;exit 1;; # unsupported
   "$BASH_VERSION") _sel_upper() { eval $1='"${'$1'^^}"'; }
@@ -31,6 +33,7 @@ case "$BASH_VERSION$KSH_VERSION$ZSH_VERSION" in
   ;;
   "$ZSH_VERSION") _sel_upper() { eval $1='"${(U)'$1'}"'; }
     eval '_sel_keycode() { k=$((#key)); }'
+    _sel_rdn='k'
   ;;
   "$KSH_VERSION") _sel_upper() { eval typeset -u u='"$'$1'"; '$1='"$u"'; }
     _sel_keycode() { k=$(printf '%d' "'$key"); }
@@ -45,7 +48,6 @@ _sel_lesspipe="${_sel_lesspipe##*/}"
 _sel_tmout=0.01
 [[ "$BASH_VERSION" = 3.* ]] && _sel_tmout=1
 _sel_letters='abcdefghijklmnopqrstuvwxyz'
-_sel_stty_opt=()
 
 
 _sel_tput() {
@@ -79,13 +81,13 @@ _sel_tput() {
 }
 
 _sel_probe_smam() {
-  typeset row col o=n
-  [ "$ZSH_VERSION" ] && o=k
+  typeset row col
+  SEL_SMAM=0
   printf '\e7\e[?7l\e[%dG  \e[6n' "$COLUMNS" >/dev/tty
-  IFS= read -r$o 2 -t $_sel_tmout </dev/tty
-  IFS='[;' read -r -t $_sel_tmout -d R row col </dev/tty
+  IFS= read -r"$_sel_rdn" 2 -t 1 </dev/tty || return
+  IFS='[;' read -r -t 1 -d R row col </dev/tty
   printf '\e8\e[?7h' >/dev/tty
-  [ "$col" = "$COLUMNS" ] && SEL_SMAM=1 || SEL_SMAM=0
+  [ "$col" = "$COLUMNS" ] && SEL_SMAM=1
 }
 
 _sel_tty_init() {
@@ -269,14 +271,14 @@ _sel_items_filter()
 
 _sel_readkey()
 {
-  typeset o=${1:-n} k 
-  IFS= read -rs"$o"1 key
+  typeset k
+  IFS= read -rs"$_sel_rdn" 1 key
   case "$key" in
     $'\x1b')
-      key=""
+      key=''
       while :; do
-        k=""
-        LC_NUMERIC=C read -rs"$o"1 -t $_sel_tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
+        k=''
+        LC_NUMERIC=C read -rs"$_sel_rdn" 1 -t $_sel_tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
         [ ! "$k" ] && key=${key:-$'\x1b'} && break
         key+="$k"
         case "$key" in
@@ -363,7 +365,7 @@ _sel_view_file() {
 }
 
 _sel_dirbrowse() {
-  typeset dir="${1:-.}" 
+  typeset dir="${1:-.}"
   dir=$(\cd "$dir" >/dev/null 2>&1||exit 1;pwd) || return 3
   _items_ori=("${_aitems[@]}")
   _sel_menuprompt 'Loading...'
@@ -436,7 +438,7 @@ _sel_file_keys() {
     ;;
     'OQ') # F2
       [ "$archive" ] && {
-        selected="$_sel_lesspipe $archive:$item"
+        selected="$_sel_lesspipe $(printf %q "$archive:$item")";
         return 1
       }
     ;;
@@ -458,14 +460,13 @@ _sel_file_keys() {
 
 _sel_domenu()
 {
-  typeset o=n _force_nsel
+  typeset _force_nsel
   _nsel=1
-  [ "$ZSH_VERSION" ] && o=k
   ((nbitems)) || return 1
   ((nbitems<_maxlines)) && _sel_showmenu
   while true
   do
-    _sel_readkey $o #$key
+    _sel_readkey #$key
     e=2
     [ "$_sel_option" ] && { _sel_file_keys "$key"; e=$?; }
     [ "$e" = 2 ] && [ "$_keyfunc" ] && { "$_keyfunc"; e=$?; }
@@ -533,7 +534,7 @@ _sel_domenu()
           ((nbitems)) || {
             printf "Not found !"
             _sel_tput el
-            read -rs"$o"1 -t 0.5 key 2>/dev/null
+            read -rs"$_sel_rdn"1 -t 0.5 key 2>/dev/null
             filter="${filter%?}"
             _nsel=''
             _sel_items_filter "$filter"
@@ -578,7 +579,7 @@ function selector
   _keyfunc=""
   _sel_option=""
   quiet=false
-  
+ 
   while [ $# -gt 0 ]; do
     shift=2
     case "$1" in
@@ -592,7 +593,7 @@ function selector
         [ "$2" ] && itemfile="$2" || return 1;
         ;;
       -m|--max)
-        [ "$2" ] && _maxlines="$(($2+1))" || return 1
+        [ "$2" ] && (($2>0)) || return 1; ((_maxlines=$2+1))
         ;;
       -P|--powerline)
         [ "$2" ] && _powerline="$2" || return 1
@@ -613,16 +614,20 @@ function selector
         ;;
       -q|--quiet) quiet=true;shift=1
         ;;
-      *)
-        printf "usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>] [-k <keyfunc>]\n"
-        printf "args :\n"
-        printf "%s\n" "  -p, --prompt          menu prompt"
-        printf "%s\n" "  -i, --items           menu items \n separated [description \t separated]"
-        printf "%s\n" "  -f, --file            file with items"
-        printf "%s\n" "  -F, --filter          glob filter items"
-        printf "%s\n" "  -P, --powerline       y or n, powerline symbol usage"
-        printf "%s\n" "  -a, --autofilter      y or n, filter at keystrokes (default y)"
-        printf "%s\n" "  -k, --keyfunc         Custom additional key function"
+      *) cat - <<'EOF'
+usage: selector [-p <prompt>] [-P <y|n>] [-k <keyfunc>] [-m <max>] [-o <opt>] -i <items>
+       selector [-p <prompt>] [-P <y|n>] [-k <keyfunc>] [-m <max>] [-o <opt>] -f <itemfile>
+args :
+  -p, --prompt          menu prompt
+  -i, --items           menu items \n separated [description \t separated]
+  -f, --file            file with items or - for stdin
+  -F, --filter          initial value of filter text (no initial filtering)
+  -P, --powerline       y or n, powerline symbol usage
+  -a, --autofilter      y or n, filter at keystrokes (default y)
+  -k, --keyfunc         Custom additional key function (using selector as function)
+  -m, --max             max number of items displayed
+  -o, --option          <dirnames>|<filenames> render icons/browse
+EOF
         return 1
         ;;
     esac
