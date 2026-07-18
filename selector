@@ -89,7 +89,7 @@ _sel_probe_smam() {
 }
 
 _sel_tty_init() {
-  $tty_init && return
+  ((tty_init)) && return
   _stty_ori="$($_sel_stty -g </dev/tty 2>/dev/null)"
   $_sel_stty intr '' -echo </dev/tty 2>/dev/null
   [ "$LINES" ] || read -r LINES COLUMNS < <($_sel_stty size </dev/tty)
@@ -103,15 +103,15 @@ _sel_tty_init() {
   disp_item="\n$fg${SELECTOR_COL_NUM}m %*s  $fg${SELECTOR_COL_ITEM}m%-*s$fg${SELECTOR_COL_COMMENT}m %s\e[0m"
   disp_form="$bg${SELECTOR_COL_PROMPT}m$wfg %s $fg${SELECTOR_COL_PROMPT}m$bg${SELECTOR_COL_TOTAL}m$pl$wfg %s$fg${SELECTOR_COL_TOTAL}m\e[49m$pl\e[0m %s"
   ((SELECTOR_CASEI)) && disp_form="${disp_form//$SELECTOR_COL_TEXT/$SELECTOR_COL_CASEI}"
-  tty_init=true
+  tty_init=1
 }
 
 _sel_tty_restore() {
-  $tty_init || return
+  ((tty_init)) || return
   _sel_tput ed >&2
   _sel_tput cnorm >&2
-  tty_init=false
   $_sel_stty $_stty_ori </dev/tty >/dev/null 2>&1
+  return 0
 }
 
 _sel_load_items() {
@@ -554,7 +554,7 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet=0 shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur item ritem itemfile uitem ufilt break=0
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet=0 shift stream _a filtered prev_filtered depth=1 tty_init=0 _stty_ori i j lines cur item ritem itemfile uitem ufilt break=0
   [ "$ZSH_VERSION" ] || _a='_'
   ((SELECTOR_CASEI)) || SELECTOR_CASEI=0
   prompt='select'
@@ -624,7 +624,7 @@ EOF
     '') _sel_load_items <<<"$_items" >&2;;
     *)  _sel_load_items <"$itemfile" >&2;;
   esac
-  ((break)) && selected=''
+  ((break)) && _sel_tty_restore && return 1
   [ ! "$selected" ] && {
     if [ "$__sel_lc" ]; then
       LC_ALL="$__sel_lc" _sel_domenu </dev/tty >&2
