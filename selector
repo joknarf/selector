@@ -309,19 +309,6 @@ _sel_item_expand() {
   return 0
 }
 
-_sel_save_items() {
-  _items_ori=($_a "${_aitems[@]}")
-  prev_filtered=($_a "${filtered[@]}")
-  [ "$_a" ] && unset '_items_ori[0]' 'prev_filtered[0]'
-}
-
-_sel_restore_items() {
-  _aitems=($_a "${_items_ori[@]}")
-  filtered=($_a "${prev_filtered[@]}")
-  [ "$_a" ] && unset '_aitems[0]' 'filtered[0]'
-  _sel_nbitems
-}
-
 _sel_item_arch() {
   case "$archive" in
     *.zip|*.jar|*.whl) item="${item#*[0-9][0-9]:[0-9][0-9]   }";;
