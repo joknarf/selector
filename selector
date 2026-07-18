@@ -23,7 +23,6 @@
 
 [ "$SELECTOR_USE_TPUT" ] && alias _sel_tput=tput
 
-_sel_stty_opt=()
 _sel_rdn='n'
 case "$BASH_VERSION$KSH_VERSION$ZSH_VERSION" in
   '') return 1 2>/dev/null;exit 1;; # unsupported
@@ -37,7 +36,6 @@ case "$BASH_VERSION$KSH_VERSION$ZSH_VERSION" in
   ;;
   "$KSH_VERSION") _sel_upper() { eval typeset -u u='"$'$1'"; '$1='"$u"'; }
     _sel_keycode() { k=$(printf '%d' "'$key"); }
-    _sel_stty_opt=(-echo)
   ;;
 esac
 
@@ -93,7 +91,7 @@ _sel_probe_smam() {
 _sel_tty_init() {
   $tty_init && return
   _stty_ori="$($_sel_stty -g </dev/tty 2>/dev/null)"
-  $_sel_stty intr '' "${_sel_stty_opt[@]}" </dev/tty 2>/dev/null
+  $_sel_stty intr '' -echo </dev/tty 2>/dev/null
   [ "$LINES" ] || read -r LINES COLUMNS < <($_sel_stty size </dev/tty)
   _sel_tput civis
   [ "$SEL_SMAM" ] || _sel_probe_smam
@@ -130,7 +128,7 @@ _sel_load_items() {
         ((sec=SECONDS))
         ((s<sec)) && {
           IFS= read -rs"${_sel_rdn}" 1 -t $_sel_tmout key </dev/tty
-          [[ $key == $'\003' ]] && break
+          [[ $key == $'\003' ]] && break=1 && break
           ((s=SECONDS))
         }
     done
@@ -276,7 +274,7 @@ _sel_readkey()
   case "$key" in
     $'\x1b')
       key=''
-      while :; do
+      while ((break==0)); do
         k=''
         LC_NUMERIC=C read -rs"$_sel_rdn" 1 -t $_sel_tmout k 2>/dev/null # LC_NUMERIC=C for old ksh
         [ ! "$k" ] && key=${key:-$'\x1b'} && break
@@ -464,7 +462,7 @@ _sel_domenu()
   _nsel=1
   ((nbitems)) || return 1
   ((nbitems<_maxlines)) && _sel_showmenu
-  while true
+  while ((break==0))
   do
     _sel_readkey #$key
     e=2
@@ -569,7 +567,7 @@ function selector
   typeset prompt filter
   typeset bg="\e[48;2;" fg="\e[38;2;" pl=""
   typeset wfg="$fg${SELECTOR_COL_TEXT}m"
-  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur item ritem itemfile uitem ufilt
+  typeset _items _aitems _maxlines _autofilter _keyfunc _sel_option _nsel=1 _items_ori disp_item_sel disp_item disp_form key nbitems _find_type _path_fprefix _path_rprefix _last_nsel _last_items _last_items_ori e archive quiet shift stream _a filtered prev_filtered depth=1 tty_init=false _stty_ori i j lines cur item ritem itemfile uitem ufilt break=0
   [ "$ZSH_VERSION" ] || _a='_'
   ((SELECTOR_CASEI)) || SELECTOR_CASEI=0
   prompt='select'
@@ -639,7 +637,7 @@ EOF
     '') _sel_load_items <<<"$_items" >&2;;
     *)  _sel_load_items <"$itemfile" >&2;;
   esac
-  [ ! "$selected" ] && {
+  ((break==0)) && [ ! "$selected" ] && {
     if [ "$__sel_lc" ]; then
       LC_ALL="$__sel_lc" _sel_domenu </dev/tty >&2
     else
