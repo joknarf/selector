@@ -41,15 +41,19 @@ see [joknarf tools](https://joknarf.github.io/joknarf-tools) for package reposit
 ## usage
 
 ```
-usage: selector [-p <prompt>] -i <items>|-f <itemfile> [-P <y|n>]
+usage: selector [-p <prompt>] [-P <y|n>] [-k <keyfunc>] [-m <max>] [-o <opt>] -i <items>
+       selector [-p <prompt>] [-P <y|n>] [-k <keyfunc>] [-m <max>] [-o <opt>] -f <itemfile>
 args :
-  -p, --prompt          menu prompt
-  -i, --items           menu items \n separated [descriptions \t separated]
-  -f, --file            file with items
-  -F, --filter          regexp pattern filter items
-  -P, --powerline       y or n, powerline symbol usage
-  -a, --autofilter      y or n, filter at keystrokes
-  -k, --keyfunc         Custom additional key function
+  -p, --prompt          <prompt> menu prompt
+  -i, --items           <items> menu items \n separated [description \t separated]
+  -f, --file            <file> file with items or - for stdin
+  -F, --filter          <text> initial value of filter text (no initial filtering)
+  -P, --powerline       <y|n>, powerline symbol usage
+  -a, --autofilter      <y|n>, filter at keystrokes (default y)
+  -k, --keyfunc         <keyfunc> Custom additional key function (using selector as function)
+  -m, --max             <max> max number of items displayed
+  -o, --option          <dirnames>|<filenames> render icons/browse
+  -q, --quiet           silent selected item output
 ```
 
 selector can be used as command line or sourced to be used as function (bash/zsh/ksh compatible)  
