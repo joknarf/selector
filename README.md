@@ -76,7 +76,7 @@ When sourced, the selected item is available as `$selected`.
 |<kbd>Ctrl</kbd><kbd>A</kbd>    | use all screen to display menu                        |
 |<kbd>Tab</kbd>                  | apply/new filter                                      |
 |<kbd>Enter</kbd>                | validate item selected                                |
-|<kbd>Alt</kdb><kdb>i</kbd>      | switch ignore case on/off                             |
+|<kbd>Alt</kbd><kbd>i</kbd>      | switch ignore case on/off                             |
 |<kbd>Ctrl</kbd><kbd>L</kbd>     | refresh / resize menu according to term size          |
 
 * filter pattern can be applied entering text
