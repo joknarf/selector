@@ -122,7 +122,7 @@ _sel_load_items() {
     _aitems=();set -A _aitems 2>/dev/null
     while IFS=$'\n' read -r it;do
         ((${#it})) || continue
-        ((nb == 2)) && _sel_menuprompt
+        ((nb == 2)) && sel_stty_init && _sel_menuprompt
         ((nb == _maxlines)) && _sel_showmenu
         _aitems[nb++]="$it"
         ((sec=SECONDS))
@@ -453,6 +453,7 @@ _sel_domenu()
   typeset _force_nsel
   _nsel=1
   ((nbitems)) || return 1
+  _sel_stty_init
   ((nbitems<_maxlines)) && _sel_showmenu
   while ((break==0))
   do
